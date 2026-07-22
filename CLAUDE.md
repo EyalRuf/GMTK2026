@@ -1,4 +1,4 @@
-# CLAUDE.md — <GAME NAME> (game jam, <DATES>)
+# CLAUDE.md — Nine Lives (GMTK 2026, theme: Countdown)
 
 <!--
   KEEP THIS UNDER ~110 LINES. It is re-sent on EVERY request, for three days.
@@ -7,10 +7,10 @@
 
 ## What this is
 
-`<one sentence: genre, core verb, win condition>`
+2.5D sidescroller puzzle platformer about a cat and its nine lives. Theme: Countdown.
 
-Unity `6000.4.1f1` · URP · 3D · new Input System
-Jam: `<jam name>`, submission deadline `<date + time + timezone>`.
+Unity `6000.4.1f1` · URP · 3D project, 2.5D gameplay · new Input System
+Jam: GMTK 2026, submission deadline Sunday 2026-07-26, 17:00 Israel time (IDT, UTC+3).
 
 **Scope is fixed and small.** This ships Sunday. Prefer the ugly thing that works over the clean
 thing that isn't done. Don't propose refactors, abstractions, or "we could later…" unless asked.
@@ -38,7 +38,7 @@ it** — a nag that repeats is worse than no nag.
 
 ## The Unity Editor — read freely, never write uninvited
 
-The Unity CLI is installed and the Editor is usually open. See [UNITY_CLI.md](UNITY_CLI.md).
+The Unity CLI is installed and the Editor is usually open. See [Claude/UNITY_CLI.md](Claude/UNITY_CLI.md).
 
 **Reading is always allowed — do it constantly, without asking.** This is the whole point of the
 CLI and it costs the user nothing:
@@ -88,7 +88,7 @@ dirty without saying so.
 
 - **One feature per session**, then the user `/clear`s.
 - **Don't re-read files you've read this session.** Don't re-derive decisions already made —
-  they're in [STATE.md](STATE.md).
+  they're in [Claude/STATE.md](Claude/STATE.md).
 - **In code, don't ask permission for reversible things** — just do them. This does NOT extend to
   the Editor (above).
 - **Ask before**: changing the core loop, adding a package, restructuring scenes, or touching
@@ -103,6 +103,6 @@ dirty without saying so.
 
 ## STATE.md
 
-[STATE.md](STATE.md) is the current state of the game — **rewritten in place**, never appended
+[Claude/STATE.md](Claude/STATE.md) is the current state of the game — **rewritten in place**, never appended
 to. Read it at session start; update it when something meaningful changes. Under 100 lines: what
 exists, what's half-done, what's next, known bugs. It is NOT a changelog.
