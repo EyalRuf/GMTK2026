@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6789b780e3d939543a1e61d96b5882c3, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::NineLives.GameConfig
+  maxSpeed: 8
+  groundAcceleration: 90
+  groundDeceleration: 110
+  airAcceleration: 55
+  airDeceleration: 25
+  turnBoost: 2
+  jumpHeight: 3.5
+  timeToApex: 0.4
+  fallGravityMultiplier: 1.8
+  jumpCutGravityMultiplier: 3.2
+  maxFallSpeed: 26
+  coyoteTime: 0.12
+  jumpBuffer: 0.12
+  playerHeight: 1.2
+  playerRadius: 0.35
+  groundProbeDepth: 0.12
+  corpseSize: {x: 1.05, y: 1.2, z: 1.2}
+  corpseMass: 6
+  corpseBounciness: 0.55
+  corpseBounceThreshold: 5
+  corpseMaxBounce: 13
+  corpseHoldBounceMultiplier: 1.35
+  corpseSettleTime: 0.3
+  livesPerLevel: 9
+  respawnGrace: 0.35
+  cameraOffset: {x: 0, y: 1.5, z: -15}
+  cameraSmoothing: 0.16
+  cameraLookAhead: 0.25
+  killPlaneY: -25
+  levelDepth: 3
