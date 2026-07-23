@@ -26,12 +26,8 @@ it** — a nag that repeats is worse than no nag.
 
 - **Session sprawl** — two-plus unrelated features in one session, or you're re-reading files
   from way back: "worth `/clear`ing before the next thing."
-- **Scope creep** — the ask adds a system instead of finishing one, or won't fit the hours left.
-  Say so with a rough cost and a smaller version. Don't refuse — flag once, then build it.
 - **Same bug, 3+ attempts** — stop patching. Say the context is polluted and recommend `/clear`
   plus a fresh description with the error text.
-- **Never been built** — if it's Saturday and the game has never produced a build, say so.
-  Discovering a broken build on Sunday night is the classic jam death.
 - **Feature freeze** — Sunday morning onward, only bugs and juice. Push back on new systems.
 - **Repeat gotcha** — if something bites twice, add one line to Conventions below.
 - **Asked to hand-edit `.unity` / `.prefab` / `.asset` YAML** — refuse, use the CLI instead.
@@ -94,12 +90,6 @@ dirty without saying so.
 - **Ask before**: changing the core loop, adding a package, restructuring scenes, or touching
   more than ~4 files.
 - Match surrounding code style. No comment blocks explaining obvious code.
-
-## Conventions
-
-- UGUI: RectTransform anchors, **not** `VerticalLayoutGroup`/`LayoutElement`, for anything that
-  resizes or reveals at runtime. VLG fights runtime layout changes.
-- `<add gotchas here AS THEY BITE — one line each, immediately>`
 
 ## STATE.md
 
