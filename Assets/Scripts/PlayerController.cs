@@ -13,12 +13,16 @@ namespace NineLives
         Transform mesh;
 
         bool wasGrounded;
+        MovingPlatform ridingPlatform;
+        Vector3 ridingPlatformLastPos;
         public bool Grounded { get; private set; }
         public Vector2 Velocity => motor.Velocity;
         public Vector3 FeetPosition => transform.position;
         public bool JumpedThisStep { get; private set; }
         public bool BouncedThisStep { get; private set; }
         public bool LandedThisStep { get; private set; }
+        public float SpeedMultiplier = 1f;
+        public float JumpMultiplier = 1f;
 
         public void Configure(GameConfig config)
         {
@@ -32,18 +36,9 @@ namespace NineLives
             cc.skinWidth = 0.02f;
             cc.minMoveDistance = 0f;
 
-            var m = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            m.name = "CatMesh";
-            Destroy(m.GetComponent<Collider>());
-            m.transform.SetParent(transform, false);
-            m.transform.localScale = new Vector3(cfg.playerRadius * 2f, cfg.playerHeight, cfg.playerRadius * 2f);
-            m.transform.localPosition = Vector3.up * (cfg.playerHeight * 0.5f);
-            m.GetComponent<MeshRenderer>().sharedMaterial = GreyboxFactory.Make(GreyboxFactory.Player, 0.2f);
-            mesh = m.transform;
-            // little "ear" nub so facing direction reads
-            var ear = GreyboxFactory.Box("Ear", mesh, new Vector3(0.25f, 0.55f, 0f),
-                new Vector3(0.3f, 0.3f, 0.3f), GreyboxFactory.Make(GreyboxFactory.Player * 0.8f, 0.2f), false);
-            ear.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+            mesh = transform.Find("CatMesh");
+            mesh.localScale = new Vector3(cfg.playerRadius * 2f, cfg.playerHeight, cfg.playerRadius * 2f);
+            mesh.localPosition = Vector3.up * (cfg.playerHeight * 0.5f);
         }
 
         public void Spawn(Vector3 feet)
@@ -59,19 +54,29 @@ namespace NineLives
         public void Tick(MotorInput input, float dt)
         {
             JumpedThisStep = BouncedThisStep = LandedThisStep = false;
+            input.SpeedMultiplier = SpeedMultiplier;
+            input.JumpMultiplier = JumpMultiplier;
 
-            bool grounded = Probe(out bool onCorpse);
+            if (ridingPlatform != null)
+            {
+                Vector3 platformDelta = ridingPlatform.transform.position - ridingPlatformLastPos;
+                if (platformDelta.sqrMagnitude > 0f) cc.Move(platformDelta);
+            }
+
+            bool grounded = Probe(out bool onTrampoline, out MovingPlatform platform);
+            ridingPlatform = grounded ? platform : null;
+            if (ridingPlatform != null) ridingPlatformLastPos = ridingPlatform.transform.position;
             float impactVy = motor.Velocity.y;
 
             bool justLanded = grounded && !wasGrounded && impactVy < 0f;
-            bool bounce = justLanded && onCorpse && impactVy < -cfg.corpseBounceThreshold;
+            bool bounce = justLanded && onTrampoline && impactVy < -cfg.trampolineBounceThreshold;
 
             motor.Tick(dt, input, grounded && !bounce);
 
             if (bounce)
             {
-                float mult = input.JumpHeld ? cfg.corpseHoldBounceMultiplier : 1f;
-                float up = Mathf.Min(-impactVy * cfg.corpseBounciness * mult, cfg.corpseMaxBounce);
+                float mult = input.JumpHeld ? cfg.trampolineHoldBounceMultiplier : 1f;
+                float up = Mathf.Min(-impactVy * cfg.trampolineBounciness * mult, cfg.trampolineMaxBounce);
                 motor.Bounce(up);
                 BouncedThisStep = true;
             }
@@ -101,9 +106,10 @@ namespace NineLives
             wasGrounded = grounded;
         }
 
-        bool Probe(out bool corpse)
+        bool Probe(out bool onTrampoline, out MovingPlatform platform)
         {
-            corpse = false;
+            onTrampoline = false;
+            platform = null;
             float r = cfg.playerRadius * 0.92f;
             Vector3 origin = transform.position + Vector3.up * (cfg.playerRadius + 0.02f);
             float dist = cfg.playerRadius + cfg.groundProbeDepth;
@@ -115,7 +121,9 @@ namespace NineLives
                 if (h.collider.transform.IsChildOf(transform)) continue;
                 if (h.collider.transform == transform) continue;
                 grounded = true;
-                if (h.collider.GetComponentInParent<Corpse>() != null) corpse = true;
+                var corpse = h.collider.GetComponentInParent<Corpse>();
+                if (corpse != null && corpse.Kind == CorpseKind.Trampoline) onTrampoline = true;
+                if (platform == null) platform = h.collider.GetComponentInParent<MovingPlatform>();
             }
             return grounded && motor.Velocity.y <= 0.5f;
         }

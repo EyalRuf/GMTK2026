@@ -1,73 +1,56 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NineLives
 {
-    /// Depresses when a body (corpse) or the player rests on it.
+    /// Editor-placeable pressure plate. Size the trigger by scaling the object.
+    /// Presses while any corpse or the player overlaps it.
+    [RequireComponent(typeof(BoxCollider))]
     public class PressurePlate : MonoBehaviour
     {
-        public int Link;
-        public bool Pressed { get; private set; }
+        [Tooltip("Visual cap that dips down when pressed. Optional.")]
+        public Transform cap;
+        public float pressDepth = 0.18f;
+        public float capSpeed = 3f;
+        [Tooltip("Cap material while unpressed (Mat_Plate).")]
+        public Material matUp;
+        [Tooltip("Cap material while pressed (Mat_PlateHit).")]
+        public Material matDown;
 
-        GameConfig cfg;
-        Transform cap;
-        Vector3 upPos, downPos;
-        Vector3 checkCenter;
-        Vector3 checkHalf;
-        Material matUp, matDown;
-        System.Action onPressChanged;
+        public bool Pressed => weights.Count > 0;
 
-        public void Build(GameConfig config, PlateDef def, Transform parent, System.Action onChanged)
+        readonly HashSet<Collider> weights = new();
+        Vector3 capUpLocal, capDownLocal;
+        MeshRenderer capRenderer;
+
+        void Awake()
         {
-            cfg = config;
-            Link = def.Link;
-            onPressChanged = onChanged;
+            GetComponent<BoxCollider>().isTrigger = true;
 
-            matUp = GreyboxFactory.Make(GreyboxFactory.Plate, 0.2f, true);
-            matDown = GreyboxFactory.Make(GreyboxFactory.PlateHit, 0.2f, true);
-
-            float depth = cfg.levelDepth * 0.9f;
-            var root = new GameObject("Plate").transform;
-            root.SetParent(parent, false);
-            root.position = new Vector3(def.Pos.x, def.Pos.y, 0f);
-            transform.SetParent(root, false);
-
-            // frame
-            GreyboxFactory.Box("PlateFrame", root, new Vector3(0f, -0.15f, 0f),
-                new Vector3(def.Width + 0.4f, 0.3f, depth + 0.4f),
-                GreyboxFactory.Make(GreyboxFactory.Ground2, 0.1f));
-
-            var capGo = GreyboxFactory.Box("PlateCap", root, new Vector3(0f, 0.12f, 0f),
-                new Vector3(def.Width, 0.24f, depth), matUp, collider: false);
-            cap = capGo.transform;
-            upPos = cap.localPosition;
-            downPos = upPos + Vector3.down * 0.18f;
-
-            checkHalf = new Vector3(def.Width * 0.5f, 0.45f, depth * 0.5f);
-            checkCenter = root.position + Vector3.up * 0.4f;
-        }
-
-        void FixedUpdate()
-        {
-            bool now = AnyPresserOn();
-            cap.localPosition = Vector3.MoveTowards(cap.localPosition, now ? downPos : upPos, 3f * Time.fixedDeltaTime);
-            cap.GetComponent<MeshRenderer>().sharedMaterial = now ? matDown : matUp;
-
-            if (now != Pressed)
+            if (cap != null)
             {
-                Pressed = now;
-                onPressChanged?.Invoke();
+                capUpLocal = cap.localPosition;
+                capDownLocal = capUpLocal + Vector3.down * pressDepth;
+                capRenderer = cap.GetComponent<MeshRenderer>();
+                if (capRenderer != null) capRenderer.sharedMaterial = matUp;
             }
         }
 
-        bool AnyPresserOn()
+        void OnTriggerEnter(Collider other) { if (IsWeight(other)) weights.Add(other); }
+        void OnTriggerExit(Collider other) { weights.Remove(other); }
+
+        static bool IsWeight(Collider c) =>
+            c.GetComponentInParent<Corpse>() != null || c.GetComponentInParent<PlayerController>() != null;
+
+        void Update()
         {
-            var hits = Physics.OverlapBox(checkCenter, checkHalf, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
-            foreach (var h in hits)
-            {
-                if (h.GetComponentInParent<Corpse>() != null) return true;
-                if (h.GetComponentInParent<PlayerController>() != null) return true;
-            }
-            return false;
+            // Prune colliders that vanished without firing OnTriggerExit (e.g. the
+            // player is SetActive(false) on death rather than destroyed).
+            weights.RemoveWhere(c => c == null || !c.gameObject.activeInHierarchy);
+
+            if (cap == null) return;
+            cap.localPosition = Vector3.MoveTowards(cap.localPosition, Pressed ? capDownLocal : capUpLocal, capSpeed * Time.deltaTime);
+            if (capRenderer != null) capRenderer.sharedMaterial = Pressed ? matDown : matUp;
         }
     }
 }

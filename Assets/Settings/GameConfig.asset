@@ -30,15 +30,25 @@ MonoBehaviour:
   groundProbeDepth: 0.12
   corpseSize: {x: 1.05, y: 1.2, z: 1.2}
   corpseMass: 6
-  corpseBounciness: 0.55
-  corpseBounceThreshold: 5
-  corpseMaxBounce: 13
-  corpseHoldBounceMultiplier: 1.35
   corpseSettleTime: 0.3
+  trampolineBounciness: 0.85
+  trampolineBounceThreshold: 3
+  trampolineMaxBounce: 18
+  trampolineHoldBounceMultiplier: 1.35
+  trampolinePlayerJumpMultiplier: 1.35
+  carryPickupRange: 2.2
+  carrySpeedMultiplier: 0.55
+  carryThrowSpeed: 14
+  carryHoldHeight: 1.6
+  carryTrajectorySegments: 20
+  carryTrajectoryTime: 1.2
   livesPerLevel: 9
   respawnGrace: 0.35
+  respawnAtDeathSpot: 1
+  respawnOffsetX: 1.5
   cameraOffset: {x: 0, y: 1.5, z: -15}
   cameraSmoothing: 0.16
   cameraLookAhead: 0.25
+  unlockAllLevelsForTesting: 1
   killPlaneY: -25
   levelDepth: 3

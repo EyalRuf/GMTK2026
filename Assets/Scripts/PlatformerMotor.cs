@@ -7,6 +7,8 @@ namespace NineLives
         public float Move;
         public bool JumpPressed;
         public bool JumpHeld;
+        public float SpeedMultiplier;
+        public float JumpMultiplier;
     }
 
     /// Pure movement math. No Unity components, no side effects — the MonoBehaviour
@@ -50,11 +52,12 @@ namespace NineLives
             // Settle onto the floor so the ground probe keeps finding it.
             if (grounded && Velocity.y < 0f) Velocity.y = -2f;
 
-            Velocity.x = StepHorizontal(dt, input.Move, grounded);
+            Velocity.x = StepHorizontal(dt, input.Move, grounded, input.SpeedMultiplier);
 
             if (buffer > 0f && coyote > 0f)
             {
-                Velocity.y = cfg.JumpVelocity;
+                float jumpMult = input.JumpMultiplier <= 0f ? 1f : input.JumpMultiplier;
+                Velocity.y = cfg.JumpVelocity * jumpMult;
                 buffer = 0f;
                 coyote = 0f;
                 Grounded = false;
@@ -69,9 +72,9 @@ namespace NineLives
             if (Velocity.y < -cfg.maxFallSpeed) Velocity.y = -cfg.maxFallSpeed;
         }
 
-        float StepHorizontal(float dt, float move, bool grounded)
+        float StepHorizontal(float dt, float move, bool grounded, float speedMultiplier)
         {
-            float target = move * cfg.maxSpeed;
+            float target = move * cfg.maxSpeed * (speedMultiplier <= 0f ? 1f : speedMultiplier);
             bool wantsMove = Mathf.Abs(move) > 0.01f;
 
             float accel = wantsMove

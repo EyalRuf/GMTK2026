@@ -32,6 +32,9 @@ namespace NineLives
         public static readonly Color Mover    = new Color(0.55f, 0.45f, 0.70f);
         public static readonly Color Exit     = new Color(0.30f, 0.90f, 0.45f);
         public static readonly Color Hazard   = new Color(0.85f, 0.20f, 0.25f);
+        public static readonly Color Trampoline = new Color(0.95f, 0.45f, 0.85f);
+        public static readonly Color Carry    = new Color(0.35f, 0.85f, 0.80f);
+        public static readonly Color Shuttle  = new Color(0.95f, 0.65f, 0.20f);
 
         public static GameObject Box(string name, Transform parent, Vector3 pos, Vector3 size, Material mat, bool collider = true)
         {
