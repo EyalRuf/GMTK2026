@@ -74,6 +74,10 @@ namespace NineLives
         public bool respawnAtDeathSpot = false;
         [Tooltip("Horizontal distance left of the death spot to respawn at, when respawnAtDeathSpot is on.")]
         public float respawnOffsetX = 1.5f;
+        [Tooltip("TEST SETTING: when a soul expires from the timer running out, spawn a corpse automatically like a manual sacrifice. When off, timed-out souls respawn with no corpse — corpses only appear from manual sacrifice.")]
+        public bool isTimedCorpseSpawn = true;
+        [Tooltip("UI ONLY: show the numeric countdown next to the soul icons. When off, only the draining soul icons indicate remaining time.")]
+        public bool showTimerSeconds = true;
 
         [Header("Camera")]
         public Vector3 cameraOffset = new Vector3(0f, 1.5f, -15f);
