@@ -17,8 +17,8 @@ namespace NineLives
         BoxCollider col;
         MeshRenderer meshRenderer;
         float stillFor;
-        MovingPlatform ridingPlatform;
-        Vector3 ridingPlatformLastPos;
+        Transform ridingSurface;
+        Vector3 ridingSurfaceLastPos;
         public bool Settled { get; private set; }
         public CorpseKind Kind { get; private set; }
         public bool Held { get; private set; }
@@ -36,7 +36,7 @@ namespace NineLives
             Settled = false;
             Held = false;
             stillFor = 0f;
-            ridingPlatform = null;
+            ridingSurface = null;
             col.enabled = true;
             rb.isKinematic = false; // must precede setting linearVelocity
 
@@ -57,11 +57,8 @@ namespace NineLives
         {
             if (rb == null || Held) return;
 
-            if (Settled)
-            {
-                RideMovingPlatform();
-                return;
-            }
+            RideMovingPlatform();
+            if (Settled) return;
 
             // Keep it pinned to the play plane no matter what.
             var p = transform.position;
@@ -75,22 +72,34 @@ namespace NineLives
             else stillFor = 0f;
         }
 
-        /// A settled (kinematic) corpse doesn't get pushed by physics, so if it's resting on a
-        /// MovingPlatform, ride it the same way PlayerController does: track its position delta.
+        /// A MovingPlatform has no Rigidbody, so PhysX never imparts its velocity onto things
+        /// resting on it - without this, a corpse (settled or still falling/settling) just gets
+        /// shoved by depenetration instead of carried, and can end up wedged in the platform.
+        /// Runs every step regardless of Settled; carries via rb.position so it works whether the
+        /// rigidbody is kinematic or still physics-active. The surface ridden can be a platform or
+        /// another corpse, so stacked corpses chain their rides transitively.
         void RideMovingPlatform()
         {
-            if (ridingPlatform != null)
+            if (ridingSurface != null)
             {
-                Vector3 delta = ridingPlatform.transform.position - ridingPlatformLastPos;
-                if (delta.sqrMagnitude > 0f) transform.position += delta;
+                Vector3 delta = ridingSurface.position - ridingSurfaceLastPos;
+                if (delta.sqrMagnitude > 0f) rb.position += delta;
             }
 
             float halfHeight = col.size.y * 0.5f * transform.lossyScale.y;
-            Vector3 origin = transform.position + Vector3.up * (halfHeight - 0.05f);
-            ridingPlatform = Physics.Raycast(origin, Vector3.down, out var hit, 0.15f, ~0, QueryTriggerInteraction.Ignore)
-                ? hit.collider.GetComponentInParent<MovingPlatform>()
-                : null;
-            if (ridingPlatform != null) ridingPlatformLastPos = ridingPlatform.transform.position;
+            Vector3 origin = transform.position - Vector3.up * (halfHeight - 0.05f);
+            ridingSurface = null;
+            if (Physics.Raycast(origin, Vector3.down, out var hit, 0.15f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                var platform = hit.collider.GetComponentInParent<MovingPlatform>();
+                if (platform != null) ridingSurface = platform.transform;
+                else
+                {
+                    var below = hit.collider.GetComponentInParent<Corpse>();
+                    if (below != null && below != this) ridingSurface = below.transform;
+                }
+            }
+            if (ridingSurface != null) ridingSurfaceLastPos = ridingSurface.position;
         }
 
         void Freeze()

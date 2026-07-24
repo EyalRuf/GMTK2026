@@ -15,8 +15,8 @@ namespace NineLives
         Transform mesh;
 
         bool wasGrounded;
-        MovingPlatform ridingPlatform;
-        Vector3 ridingPlatformLastPos;
+        Transform ridingSurface;
+        Vector3 ridingSurfaceLastPos;
         float airborneApexY;
         float hardLandingTimer;
         float footstepTimer;
@@ -163,15 +163,21 @@ namespace NineLives
             input.SpeedMultiplier = SpeedMultiplier * hardLandingMultiplier;
             input.JumpMultiplier = JumpMultiplier;
 
-            if (ridingPlatform != null)
+            // Vertical/depth carry applies as a straight position offset - only horizontal carry
+            // gets folded into the speed clamp below, so riding a platform can't stack with your
+            // own walk speed to exceed maxSpeed.
+            float platformVelX = 0f;
+            if (ridingSurface != null)
             {
-                Vector3 platformDelta = ridingPlatform.transform.position - ridingPlatformLastPos;
-                if (platformDelta.sqrMagnitude > 0f) cc.Move(platformDelta);
+                Vector3 platformDelta = ridingSurface.position - ridingSurfaceLastPos;
+                platformVelX = dt > 0f ? platformDelta.x / dt : 0f;
+                Vector3 verticalDelta = new Vector3(0f, platformDelta.y, platformDelta.z);
+                if (verticalDelta.sqrMagnitude > 0f) cc.Move(verticalDelta);
             }
 
-            bool grounded = Probe(out bool onTrampoline, out MovingPlatform platform);
-            ridingPlatform = grounded ? platform : null;
-            if (ridingPlatform != null) ridingPlatformLastPos = ridingPlatform.transform.position;
+            bool grounded = Probe(out bool onTrampoline, out Transform surface);
+            ridingSurface = grounded ? surface : null;
+            if (ridingSurface != null) ridingSurfaceLastPos = ridingSurface.position;
             float impactVy = motor.Velocity.y;
 
             bool justLanded = grounded && !wasGrounded && impactVy < 0f;
@@ -215,7 +221,8 @@ namespace NineLives
             else if (LandedThisStep) GameEvents.RaiseLanded(FeetPosition);
             TickFootsteps(dt);
 
-            var v = new Vector3(motor.Velocity.x, motor.Velocity.y, 0f);
+            float combinedX = Mathf.Clamp(platformVelX + motor.Velocity.x, -cfg.maxSpeed, cfg.maxSpeed);
+            var v = new Vector3(combinedX, motor.Velocity.y, 0f);
             cc.Move(v * dt);
 
             // stay pinned to z=0
@@ -247,10 +254,12 @@ namespace NineLives
             else footstepTimer = 0f;
         }
 
-        bool Probe(out bool onTrampoline, out MovingPlatform platform)
+        /// Ridable surface can be a MovingPlatform directly underfoot, or a Corpse standing on
+        /// one (chains through Corpse's own ridingSurface the same way stacked corpses do).
+        bool Probe(out bool onTrampoline, out Transform surface)
         {
             onTrampoline = false;
-            platform = null;
+            surface = null;
             float r = cfg.playerRadius * 0.92f;
             Vector3 origin = transform.position + Vector3.up * (cfg.playerRadius + 0.02f);
             float dist = cfg.playerRadius + cfg.groundProbeDepth;
@@ -264,7 +273,11 @@ namespace NineLives
                 grounded = true;
                 var corpse = h.collider.GetComponentInParent<Corpse>();
                 if (corpse != null && corpse.Kind == CorpseKind.Trampoline) onTrampoline = true;
-                if (platform == null) platform = h.collider.GetComponentInParent<MovingPlatform>();
+                if (surface == null)
+                {
+                    var platform = h.collider.GetComponentInParent<MovingPlatform>();
+                    surface = platform != null ? platform.transform : corpse != null ? corpse.transform : null;
+                }
             }
             return grounded && motor.Velocity.y <= 0.5f;
         }

@@ -9,22 +9,39 @@ namespace NineLives
     /// PlayerController tracking this platform's position delta while grounded on it.
     public class MovingPlatform : MonoBehaviour, ILevelResettable
     {
-        [Tooltip("World-space offset of the far end of the platform's path from its start position.")]
-        public Vector3 moveOffset = new Vector3(4f, 0f, 0f);
+        public enum MoveAxis { Horizontal, Vertical }
+
+        [Tooltip("Axis the platform travels along, relative to its own start position.")]
+        public MoveAxis axis = MoveAxis.Horizontal;
+        [Tooltip("Distance in world units from the start position to the far end of the path. Negative reverses direction.")]
+        public float travelDistance = 4f;
         public float speed = 3f;
         [Tooltip("Seconds to pause at each end before reversing.")]
         public float waitTime = 0f;
         [Tooltip("Optional. Leave empty to move continuously; drag plates in to gate movement on them being pressed.")]
         public List<PressurePlate> plates = new();
 
+        [HideInInspector, SerializeField]
+        Vector3 moveOffset; // legacy pre-axis data, read once for migration then unused
+
         Vector3 startPos, endPos;
         bool movingToEnd = true;
         float waitTimer;
 
+        Vector3 MoveOffset
+        {
+            get
+            {
+                if (travelDistance == 0f && moveOffset != Vector3.zero)
+                    return moveOffset;
+                return axis == MoveAxis.Horizontal ? new Vector3(travelDistance, 0f, 0f) : new Vector3(0f, travelDistance, 0f);
+            }
+        }
+
         void Awake()
         {
             startPos = transform.position;
-            endPos = startPos + moveOffset;
+            endPos = startPos + MoveOffset;
         }
 
         void Update()
@@ -65,7 +82,7 @@ namespace NineLives
         {
             Gizmos.color = new Color(0.95f, 0.65f, 0.2f, 0.8f);
             Vector3 basePos = Application.isPlaying ? startPos : transform.position;
-            Vector3 target = basePos + moveOffset;
+            Vector3 target = basePos + MoveOffset;
             Gizmos.DrawLine(basePos, target);
             Gizmos.DrawWireCube(target, transform.lossyScale);
         }
