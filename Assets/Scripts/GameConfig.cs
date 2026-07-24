@@ -99,6 +99,16 @@ namespace NineLives
         [Tooltip("Level Select in the menus lets you pick any level, ignoring reached progress.")]
         public bool unlockAllLevelsForTesting = false;
 
+        [Header("Death Trap Hit Feedback")]
+        [Tooltip("Duration of the player mesh's red hit-flash.")]
+        public float hitFlashDuration = 0.25f;
+        [Tooltip("Color the player mesh flashes to on a trap hit (alpha ignored).")]
+        public Color hitFlashColor = Color.red;
+        [Tooltip("Camera shake duration on a trap hit.")]
+        public float hitShakeDuration = 0.25f;
+        [Tooltip("Camera shake magnitude (world units) on a trap hit.")]
+        public float hitShakeMagnitude = 0.25f;
+
         [Header("World")]
         public float killPlaneY = -25f;
         [Tooltip("Z thickness of every greybox block.")]

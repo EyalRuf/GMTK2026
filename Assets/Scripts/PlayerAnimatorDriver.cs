@@ -27,6 +27,7 @@ namespace NineLives
         static readonly int tHardLand = Animator.StringToHash("HardLand");
         static readonly int tIdle2 = Animator.StringToHash("Idle2");
         static readonly int tDie = Animator.StringToHash("Die");
+        static readonly int tHit = Animator.StringToHash("Hit");
         static readonly int tCorpse = Animator.StringToHash("Corpse");
         static readonly int tLevelEnter = Animator.StringToHash("LevelEnter");
         static readonly int tLevelExit = Animator.StringToHash("LevelExit");
@@ -51,6 +52,7 @@ namespace NineLives
             GameEvents.HardLanded += OnHardLanded;
             GameEvents.SacrificeDeath += OnDeath;
             GameEvents.PoofDeath += OnDeath;
+            GameEvents.TrapHit += OnTrapHit;
             GameEvents.CorpseSpawned += OnCorpseSpawned;
             GameEvents.LevelEntered += OnLevelEntered;
             GameEvents.LevelExited += OnLevelExited;
@@ -65,6 +67,7 @@ namespace NineLives
             GameEvents.HardLanded -= OnHardLanded;
             GameEvents.SacrificeDeath -= OnDeath;
             GameEvents.PoofDeath -= OnDeath;
+            GameEvents.TrapHit -= OnTrapHit;
             GameEvents.CorpseSpawned -= OnCorpseSpawned;
             GameEvents.LevelEntered -= OnLevelEntered;
             GameEvents.LevelExited -= OnLevelExited;
@@ -105,6 +108,7 @@ namespace NineLives
         void OnLanded(Vector3 _) => anim.SetTrigger(tLand);
         void OnHardLanded(Vector3 _) => anim.SetTrigger(tHardLand);
         void OnDeath(Vector3 _) => anim.SetTrigger(tDie);
+        void OnTrapHit(Vector3 _) => anim.SetTrigger(tHit);
         void OnCorpseSpawned(Vector3 _) => anim.SetTrigger(tCorpse);
         void OnLevelEntered(Vector3 _) => anim.SetTrigger(tLevelEnter);
         void OnLevelExited(Vector3 _) => anim.SetTrigger(tLevelExit);

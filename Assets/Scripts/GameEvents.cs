@@ -27,6 +27,7 @@ namespace NineLives
         public static event Action<Vector3> SacrificeDeath; // recoverable death: soul leaves body
         public static event Action<Vector3> CorpseSpawned;  // corpse form materialises
         public static event Action<Vector3> PoofDeath;      // environmental death: poof + respawn
+        public static event Action<Vector3> TrapHit;        // hazard impact: hit-reaction moment
 
         // --- Level flow ---
         public static event Action<Vector3> LevelEntered;   // spawn / respawn at level start
@@ -41,6 +42,7 @@ namespace NineLives
         public static void RaiseSacrificeDeath(Vector3 p) => SacrificeDeath?.Invoke(p);
         public static void RaiseCorpseSpawned(Vector3 p) => CorpseSpawned?.Invoke(p);
         public static void RaisePoofDeath(Vector3 p) => PoofDeath?.Invoke(p);
+        public static void RaiseTrapHit(Vector3 p) => TrapHit?.Invoke(p);
         public static void RaiseLevelEntered(Vector3 p) => LevelEntered?.Invoke(p);
         public static void RaiseLevelExited(Vector3 p) => LevelExited?.Invoke(p);
     }

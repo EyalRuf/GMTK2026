@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 namespace NineLives
@@ -32,6 +34,21 @@ namespace NineLives
         public float SpeedMultiplier = 1f;
         public float JumpMultiplier = 1f;
 
+        /// True from the moment an instant-kill hit lands until the death sequence hands off to
+        /// GameManager (which deactivates this object for the respawn). Guards against a second
+        /// trap re-triggering mid-sequence and tells GameManager to stop feeding real input.
+        public bool IsDying { get; private set; }
+        /// Raised once the hit's control-lock has elapsed; GameManager subscribes and continues
+        /// the same respawn flow used by falling off the map.
+        public event Action<DeathInfo> DeathSequenceReady;
+        static AudioClip sDefaultHitClip;
+        static readonly int pBaseColor = Shader.PropertyToID("_BaseColor");
+
+        Renderer[] flashRenderers;
+        Color[] flashBaseColors;
+        MaterialPropertyBlock flashBlock;
+        Coroutine flashRoutine;
+
         public void Configure(GameConfig config)
         {
             cfg = config;
@@ -47,6 +64,12 @@ namespace NineLives
             mesh = transform.Find("CatMesh");
             mesh.localScale = new Vector3(cfg.playerRadius * 2f, cfg.playerHeight, cfg.playerRadius * 2f);
             mesh.localPosition = Vector3.up * (cfg.playerHeight * 0.5f);
+
+            flashRenderers = mesh.GetComponentsInChildren<Renderer>(true);
+            flashBaseColors = new Color[flashRenderers.Length];
+            for (int i = 0; i < flashRenderers.Length; i++)
+                flashBaseColors[i] = flashRenderers[i].sharedMaterial.GetColor(pBaseColor);
+            flashBlock = new MaterialPropertyBlock();
         }
 
         public void Spawn(Vector3 feet)
@@ -58,7 +81,71 @@ namespace NineLives
             wasGrounded = false;
             airborneApexY = feet.y;
             hardLandingTimer = 0f;
+            IsDying = false;
+            ResetHitFlash();
             gameObject.SetActive(true);
+        }
+
+        /// Reusable instant-kill entry point: any hazard (DeathTrap today, future instant-kill
+        /// mechanics later) notifies the player here instead of touching game-flow state directly.
+        /// Applies knockback immediately (the existing motor's gravity/deceleration carries it
+        /// through naturally), fires the hit reaction, then hands off to GameManager once the
+        /// control lock elapses so it can continue the exact same respawn flow as falling off the
+        /// map — the player dies in place instead of falling first.
+        public void Die(DeathInfo info)
+        {
+            if (IsDying) return;
+            IsDying = true;
+
+            motor.Velocity = info.KnockbackVelocity;
+            GameEvents.RaiseTrapHit(FeetPosition);
+            PlayHitFeedback(info);
+            if (flashRoutine != null) StopCoroutine(flashRoutine);
+            flashRoutine = StartCoroutine(HitFlash());
+
+            StartCoroutine(FinishDeathSequence(info));
+        }
+
+        IEnumerator HitFlash()
+        {
+            float t = 0f;
+            while (t < cfg.hitFlashDuration)
+            {
+                t += Time.deltaTime;
+                float k = 1f - Mathf.Clamp01(t / cfg.hitFlashDuration);
+                for (int i = 0; i < flashRenderers.Length; i++)
+                {
+                    flashBlock.SetColor(pBaseColor, Color.Lerp(flashBaseColors[i], cfg.hitFlashColor, k));
+                    flashRenderers[i].SetPropertyBlock(flashBlock);
+                }
+                yield return null;
+            }
+            ResetHitFlash();
+            flashRoutine = null;
+        }
+
+        void ResetHitFlash()
+        {
+            if (flashRenderers == null) return;
+            flashBlock.Clear();
+            for (int i = 0; i < flashRenderers.Length; i++)
+                flashRenderers[i].SetPropertyBlock(flashBlock);
+        }
+
+        void PlayHitFeedback(DeathInfo info)
+        {
+            var clip = info.HitSfxOverride != null ? info.HitSfxOverride : DefaultHitClip;
+            AudioSource.PlayClipAtPoint(clip, FeetPosition);
+            if (info.HitVfxOverride != null)
+                Destroy(Instantiate(info.HitVfxOverride, FeetPosition, Quaternion.identity), 3f);
+        }
+
+        static AudioClip DefaultHitClip => sDefaultHitClip != null ? sDefaultHitClip : (sDefaultHitClip = ProceduralAudio.Hit());
+
+        IEnumerator FinishDeathSequence(DeathInfo info)
+        {
+            yield return new WaitForSeconds(info.ControlLockDuration);
+            DeathSequenceReady?.Invoke(info);
         }
 
         public void Tick(MotorInput input, float dt)

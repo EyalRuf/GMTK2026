@@ -97,6 +97,8 @@ namespace NineLives
 
             corpseCarry = player.GetComponent<CorpseCarry>();
             corpseCarry.Configure(config, player, cam.GetComponent<Camera>());
+            player.DeathSequenceReady += OnTrapDeathReady;
+            GameEvents.TrapHit += OnTrapHitShake;
 
             audio = gameObject.AddComponent<AudioSource>();
             audio.playOnAwake = false;
@@ -259,6 +261,14 @@ namespace NineLives
 
         void TickPlayer(float dt, bool allowDeath)
         {
+            // A trap hit is already mid-sequence (knockback + hit reaction): control is locked and
+            // no other death check applies until GameManager.OnTrapDeathReady takes over.
+            if (player.IsDying)
+            {
+                player.Tick(default, dt);
+                return;
+            }
+
             corpseCarry.Sample(input);
             var mi = new MotorInput { Move = input.Move, JumpPressed = input.JumpPressed, JumpHeld = input.JumpHeld, JumpReleased = input.JumpReleased };
             player.Tick(mi, dt);
@@ -272,6 +282,12 @@ namespace NineLives
             if (player.FeetPosition.y < config.killPlaneY) DieAutomatic();
             else if (input.SacrificePressed) DieManual();
         }
+
+        /// A DeathTrap's knockback + hit-reaction has finished; continue with the exact same
+        /// death/respawn flow as walking off the map (unrecoverable, spawns a corpse in place).
+        void OnTrapDeathReady(DeathInfo info) => DieAutomatic();
+
+        void OnTrapHitShake(Vector3 _) => cam.Shake(config.hitShakeDuration, config.hitShakeMagnitude);
 
         /// Manual sacrifice (Q): consumes the current soul/time slot, then respawns next to the corpse.
         void DieManual()
@@ -338,6 +354,7 @@ namespace NineLives
 
         void Die(bool unrecoverable = false, bool spawnCorpse = true)
         {
+            hud.HideBanner();
             corpseCarry.DropHeld();
             lastDeathFeet = player.FeetPosition;
             lastDeathUnrecoverable = unrecoverable;
