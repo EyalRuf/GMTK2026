@@ -286,8 +286,31 @@ namespace NineLives
 
             if (!allowDeath) return;
 
-            if (player.FeetPosition.y < config.killPlaneY) Die(unrecoverable: true);
-            else if (input.SacrificePressed) ExpireSoulBoundary(manual: true);
+            if (player.FeetPosition.y < config.killPlaneY) DieAutomatic();
+            else if (input.SacrificePressed) DieManual();
+        }
+
+        /// Manual sacrifice (Q): consumes the current soul/time slot, then respawns next to the corpse.
+        void DieManual()
+        {
+            ConsumeSoul();
+            Die(unrecoverable: false, spawnCorpse: true);
+        }
+
+        /// Environmental death (out of bounds, death zone, or any other automatic trigger): consumes
+        /// the same soul/time slot as a manual sacrifice, but always respawns at the level entry.
+        void DieAutomatic()
+        {
+            ConsumeSoul();
+            Die(unrecoverable: true, spawnCorpse: true);
+        }
+
+        /// Snaps the timer down to the current soul boundary and advances to the next slot — the
+        /// shared soul/time deduction used by every death that isn't a natural timeout.
+        void ConsumeSoul()
+        {
+            timer.SetRemaining(nextBoundary);
+            nextBoundary -= soulInterval;
         }
 
         void UpdateCountdown(float dt)
@@ -307,21 +330,19 @@ namespace NineLives
                 audio.PlayOneShot(sTick, 0.6f);
             lastWholeSecond = whole;
 
-            if (timer.Remaining <= nextBoundary + 0.0001f) ExpireSoulBoundary(manual: false);
+            if (timer.Remaining <= nextBoundary + 0.0001f) ExpireSoulBoundary();
         }
 
-        /// A soul's slot has run out — either the timer reached it (automatic) or the player
-        /// forced it early (manual sacrifice). Manual sacrifice snaps the timer down to the
-        /// boundary immediately, dropping whatever time was left in the current slot.
-        void ExpireSoulBoundary(bool manual)
+        /// A soul's slot has run out naturally (the countdown reached the boundary on its own,
+        /// with no death involved).
+        void ExpireSoulBoundary()
         {
-            if (manual) timer.SetRemaining(nextBoundary);
             nextBoundary -= soulInterval;
 
-            // Automatic timeout with timed spawn off: the soul is consumed silently — no corpse,
-            // no death, no respawn. The player keeps going on the same continuous run; only a real
-            // death (fall/trap) or manual sacrifice ends the current life.
-            if (!manual && !config.isTimedCorpseSpawn)
+            // Timed spawn off: the soul is consumed silently — no corpse, no death, no respawn.
+            // The player keeps going on the same continuous run; only a real death (fall/trap) or
+            // manual sacrifice ends the current life.
+            if (!config.isTimedCorpseSpawn)
             {
                 livesLeft--;
                 hud.SetLives(livesLeft, config.livesPerLevel);
