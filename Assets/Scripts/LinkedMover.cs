@@ -5,7 +5,7 @@ namespace NineLives
 {
     /// A gate or lift that slides to `openOffset` (local-space, relative to wherever
     /// you place it in the editor) while any plate in `plates` is pressed.
-    public class LinkedMover : MonoBehaviour
+    public class LinkedMover : MonoBehaviour, ILevelResettable
     {
         [Tooltip("Drag the pressure plate(s) that control this mover.")]
         public List<PressurePlate> plates = new();
@@ -30,6 +30,8 @@ namespace NineLives
             var target = active ? openLocal : closedLocal;
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, target, speed * Time.fixedDeltaTime);
         }
+
+        public void ResetToInitial() => transform.localPosition = closedLocal;
 
         void OnDrawGizmosSelected()
         {

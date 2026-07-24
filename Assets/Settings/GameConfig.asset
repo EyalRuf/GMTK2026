@@ -35,9 +35,9 @@ MonoBehaviour:
   corpseSize: {x: 1.05, y: 1.2, z: 1.2}
   corpseMass: 6
   corpseSettleTime: 0.3
-  trampolineBounciness: 0.85
-  trampolineBounceThreshold: 3
-  trampolineMaxBounce: 18
+  trampolineBounciness: 3
+  trampolineBounceThreshold: 1
+  trampolineMaxBounce: 24
   trampolineHoldBounceMultiplier: 1.35
   trampolinePlayerJumpMultiplier: 1.35
   carryPickupRange: 2.2

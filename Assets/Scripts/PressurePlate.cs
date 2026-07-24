@@ -6,7 +6,7 @@ namespace NineLives
     /// Editor-placeable pressure plate. Size the trigger by scaling the object.
     /// Presses while any corpse or the player overlaps it.
     [RequireComponent(typeof(BoxCollider))]
-    public class PressurePlate : MonoBehaviour
+    public class PressurePlate : MonoBehaviour, ILevelResettable
     {
         [Tooltip("Visual cap that dips down when pressed. Optional.")]
         public Transform cap;
@@ -32,6 +32,16 @@ namespace NineLives
                 capUpLocal = cap.localPosition;
                 capDownLocal = capUpLocal + Vector3.down * pressDepth;
                 capRenderer = cap.GetComponent<MeshRenderer>();
+                if (capRenderer != null) capRenderer.sharedMaterial = matUp;
+            }
+        }
+
+        public void ResetToInitial()
+        {
+            weights.Clear();
+            if (cap != null)
+            {
+                cap.localPosition = capUpLocal;
                 if (capRenderer != null) capRenderer.sharedMaterial = matUp;
             }
         }

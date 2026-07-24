@@ -30,6 +30,16 @@ namespace NineLives
             rb = GetComponent<Rigidbody>();
             col = GetComponent<BoxCollider>();
             meshRenderer = GetComponent<MeshRenderer>();
+
+            // Full reset so a pooled corpse comes back clean, not carrying settled/held state
+            // from its previous life.
+            Settled = false;
+            Held = false;
+            stillFor = 0f;
+            ridingPlatform = null;
+            col.enabled = true;
+            rb.isKinematic = false; // must precede setting linearVelocity
+
             rb.mass = cfg.corpseMass;
             rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -37,6 +47,7 @@ namespace NineLives
             // If it still spawns overlapping geometry (tight room, nowhere clear found), cap how
             // hard PhysX can shove it out so it settles nearby instead of rocketing across the level.
             rb.maxDepenetrationVelocity = 3f;
+            rb.angularVelocity = Vector3.zero;
             rb.linearVelocity = new Vector3(launchVelocity.x, launchVelocity.y, 0f);
 
             meshRenderer.sharedMaterial = Kind == CorpseKind.Trampoline ? trampolineMat : normalMat;
