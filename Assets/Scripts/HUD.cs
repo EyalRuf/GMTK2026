@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace NineLives
 {
@@ -9,12 +10,12 @@ namespace NineLives
     /// horizontal timer bar with N radial-draining soul icons.
     public class HUD : MonoBehaviour
     {
-        [SerializeField] Text levelLabel;
-        [SerializeField] Text timerText;
-        [SerializeField] Text livesText;
-        [SerializeField] Text hintText;
-        [SerializeField] Text bannerText;
-        [SerializeField] Text bannerSub;
+        [SerializeField] TMP_Text levelLabel;
+        [SerializeField] TMP_Text timerText;
+        [SerializeField] TMP_Text livesText;
+        [SerializeField] TMP_Text hintText;
+        [SerializeField] TMP_Text bannerText;
+        [SerializeField] TMP_Text bannerSub;
         [SerializeField] Image barFill;
         [SerializeField] Image barBg;
         [SerializeField] Image bannerBg;

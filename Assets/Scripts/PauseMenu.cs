@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using TMPro;
 
 namespace NineLives
 {
@@ -17,7 +18,7 @@ namespace NineLives
         [SerializeField] GameObject settingsPanel;
 
         [SerializeField] Button startButton;
-        [SerializeField] Text startButtonLabel;
+        [SerializeField] TMP_Text startButtonLabel;
         [SerializeField] Button mainLevelSelectButton;
         [SerializeField] Button mainSettingsButton;
 
@@ -27,15 +28,15 @@ namespace NineLives
         [SerializeField] Button pauseBackToMenuButton;
 
         [SerializeField] List<Button> levelButtons = new();
-        [SerializeField] List<Text> levelButtonTexts = new();
+        [SerializeField] List<TMP_Text> levelButtonTexts = new();
         [SerializeField] Button levelSelectBackButton;
 
         [SerializeField] Slider masterSlider;
-        [SerializeField] Text masterValueLabel;
+        [SerializeField] TMP_Text masterValueLabel;
         [SerializeField] Slider musicSlider;
-        [SerializeField] Text musicValueLabel;
+        [SerializeField] TMP_Text musicValueLabel;
         [SerializeField] Slider sfxSlider;
-        [SerializeField] Text sfxValueLabel;
+        [SerializeField] TMP_Text sfxValueLabel;
         [SerializeField] Button settingsBackButton;
 
         GameConfig config;
@@ -107,7 +108,7 @@ namespace NineLives
             HideAll();
         }
 
-        static void SetSliderLabel(Text label, float v) => label.text = Mathf.RoundToInt(v * 100) + "%";
+        static void SetSliderLabel(TMP_Text label, float v) => label.text = Mathf.RoundToInt(v * 100) + "%";
 
         static void EnsureEventSystem()
         {

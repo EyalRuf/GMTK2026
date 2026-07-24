@@ -125,9 +125,13 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
   `Mat_Corpse_Trampoline_Settled`) wired as serialized fields on `Corpse` instead of generated
   in `Init()`/`Freeze()`.
 - `Assets/Prefabs/HUD.prefab` / `Assets/Prefabs/MenuUI.prefab` — the full Canvas hierarchies
-  (every Text/Image/Button/Slider) are hand-built prefabs now; `HUD.cs`/`MenuUI.cs` are just
+  (every text/Image/Button/Slider) are hand-built prefabs now; `HUD.cs`/`MenuUI.cs` are just
   `[SerializeField]`-bound data-binding components with no `new GameObject(...)` UI construction
   left. Both use a shared swappable 9-sliced sprite, `Assets/Sprites/UI_Panel.png`.
+  - **All player-facing text is TextMeshPro** (`TextMeshProUGUI`, font `LiberationSans SDF`) — the
+    legacy `UnityEngine.UI.Text` was fully migrated out. HUD/MenuUI text fields are typed `TMP_Text`.
+    The only `UnityEngine.UI.Text` left in the project is inside DOTween's optional module files
+    (third-party, not used by our UI). To restyle, swap the TMP font asset / material.
 - `Plate.prefab`'s cap and the two `Upgrade_*.prefab` pickups now have their materials
   (`Mat_Plate`/`Mat_PlateHit`, `Mat_Upgrade_Trampoline`/`Mat_Upgrade_Carry`) assigned directly on
   the prefab instead of via `GreyboxFactory.Make()` in `Awake()`.
