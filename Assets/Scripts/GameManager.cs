@@ -49,6 +49,8 @@ namespace NineLives
         bool timerStarted;
         float graceLeft;
         int lastWholeSecond;
+        float soulInterval;
+        float nextBoundary;
         bool hasDiedThisLevel;
         Vector3 lastDeathFeet;
         bool lastDeathUnrecoverable;
@@ -158,7 +160,16 @@ namespace NineLives
             hud.SetLevel(levelInstance.levelName, i + 1, levelPrefabs.Count);
             hud.SetLives(livesLeft, config.livesPerLevel);
             hud.SetHint(levelInstance.hint);
-            hud.SetTimer(levelInstance.timer, 1f);
+
+            soulInterval = levelInstance.timer;
+            float totalDuration = soulInterval * config.livesPerLevel;
+            timer.Restart(totalDuration);
+            timer.Stop();
+            nextBoundary = totalDuration - soulInterval;
+            hud.BuildSouls(config.livesPerLevel);
+            hud.ShowTimerText(config.showTimerSeconds);
+            hud.SetTimer(timer.Remaining, timer.Normalized);
+            hud.SetSouls(timer.Remaining, soulInterval);
 
             BeginLife();
             EnterState(State.Intro, 1.9f);
@@ -174,9 +185,8 @@ namespace NineLives
             cam.Snap();
             timerStarted = false;
             graceLeft = config.respawnGrace;
-            timer.Restart(levelInstance.timer);
             timer.Stop();
-            lastWholeSecond = Mathf.CeilToInt(levelInstance.timer);
+            lastWholeSecond = Mathf.CeilToInt(timer.Remaining - nextBoundary);
         }
 
         /// A dropped corpse can settle right on the death-spot respawn location; stepping up
@@ -260,6 +270,7 @@ namespace NineLives
             }
 
             hud.SetTimer(timer.Remaining, timer.Normalized);
+            hud.SetSouls(timer.Remaining, soulInterval);
             hud.SetLives(livesLeft, config.livesPerLevel);
         }
 
@@ -276,7 +287,7 @@ namespace NineLives
             if (!allowDeath) return;
 
             if (player.FeetPosition.y < config.killPlaneY) Die(unrecoverable: true);
-            else if (input.SacrificePressed) Die();
+            else if (input.SacrificePressed) ExpireSoulBoundary(manual: true);
         }
 
         void UpdateCountdown(float dt)
@@ -284,19 +295,44 @@ namespace NineLives
             if (!timerStarted)
             {
                 graceLeft -= dt;
-                if (graceLeft <= 0f) { timer.Restart(levelInstance.timer); timerStarted = true; }
+                if (graceLeft <= 0f) { timer.Resume(); timerStarted = true; }
                 return;
             }
 
-            int whole = Mathf.CeilToInt(timer.Remaining);
-            if (whole != lastWholeSecond && timer.Remaining <= 3f && timer.Remaining > 0f)
+            timer.Tick(dt);
+
+            float remainingInSoul = timer.Remaining - nextBoundary;
+            int whole = Mathf.CeilToInt(remainingInSoul);
+            if (whole != lastWholeSecond && remainingInSoul <= 3f && remainingInSoul > 0f)
                 audio.PlayOneShot(sTick, 0.6f);
             lastWholeSecond = whole;
 
-            if (timer.Tick(dt)) Die();
+            if (timer.Remaining <= nextBoundary + 0.0001f) ExpireSoulBoundary(manual: false);
         }
 
-        void Die(bool unrecoverable = false)
+        /// A soul's slot has run out — either the timer reached it (automatic) or the player
+        /// forced it early (manual sacrifice). Manual sacrifice snaps the timer down to the
+        /// boundary immediately, dropping whatever time was left in the current slot.
+        void ExpireSoulBoundary(bool manual)
+        {
+            if (manual) timer.SetRemaining(nextBoundary);
+            nextBoundary -= soulInterval;
+
+            // Automatic timeout with timed spawn off: the soul is consumed silently — no corpse,
+            // no death, no respawn. The player keeps going on the same continuous run; only a real
+            // death (fall/trap) or manual sacrifice ends the current life.
+            if (!manual && !config.isTimedCorpseSpawn)
+            {
+                livesLeft--;
+                hud.SetLives(livesLeft, config.livesPerLevel);
+                if (livesLeft <= 0) EnterGameOver();
+                return;
+            }
+
+            Die(spawnCorpse: true);
+        }
+
+        void Die(bool unrecoverable = false, bool spawnCorpse = true)
         {
             corpseCarry.DropHeld();
             lastDeathFeet = player.FeetPosition;
@@ -308,7 +344,7 @@ namespace NineLives
             // corpse so its clearance search doesn't treat the dying player as an obstacle to
             // dodge around — it can land right on the death spot instead of nearby.
             player.gameObject.SetActive(false);
-            SpawnCorpse(lastDeathFeet, deathVelocity, kind);
+            if (spawnCorpse) SpawnCorpse(lastDeathFeet, deathVelocity, kind);
             audio.PlayOneShot(sDeath);
             timer.Stop();
             timerStarted = false;
