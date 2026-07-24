@@ -9,8 +9,10 @@ using UnityEngine;
 /// - The flow is scrolled by the shader independent of mesh height; we only feed it the world
 ///   length via a MaterialPropertyBlock (per-instance, so many waterfalls share one material with
 ///   no instancing leaks) so its texel density stays constant at any height.
-/// - The splash is a separate object snapped to the exact impact point — that's where a stylized
-///   pool/foam/sparks effect belongs, decoupled from the stream mesh.
+/// - The splash is a separate object snapped to the exact impact point — a stylized foam/sparks
+///   effect belongs there, decoupled from the stream mesh. Lava pools are a fully separate,
+///   independently-placed system (see NineLives/LavaPool shader) — this component neither knows
+///   about nor drives them.
 ///
 /// Assumes the stream child is a unit quad lying in local XY (Unity's built-in Quad), pivot at its
 /// centre, "down" = the root's local -Y. Angle a waterfall by rotating the whole root.
