@@ -861,6 +861,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 965863015}
     m_Modifications:
+    - target: {fileID: 1804273116599085456, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
+      propertyPath: cameraTransform
+      value: 
+      objectReference: {fileID: 1713105061}
+    - target: {fileID: 2031391477041388094, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
+      propertyPath: cameraTransform
+      value: 
+      objectReference: {fileID: 1713105061}
+    - target: {fileID: 2339470810145940243, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
+      propertyPath: cameraTransform
+      value: 
+      objectReference: {fileID: 1713105061}
     - target: {fileID: 2341813643810441148, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -901,6 +913,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5316876891965352872, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
+      propertyPath: cameraTransform
+      value: 
+      objectReference: {fileID: 1713105061}
     - target: {fileID: 7757293686036996443, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
       propertyPath: m_Name
       value: Level_1
@@ -909,6 +925,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8613138376496497211, guid: a6d1976b85502d449bee5ea3e775fd04, type: 3}
+      propertyPath: cameraTransform
+      value: 
+      objectReference: {fileID: 1713105061}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1427,6 +1447,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d26f2046a252c4479f3337fd4af6af9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.CameraFollow
+--- !u!4 &1713105061 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5226320407618653204, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
+  m_PrefabInstance: {fileID: 1713105056}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1805877472
 PrefabInstance:
   m_ObjectHideFlags: 0
