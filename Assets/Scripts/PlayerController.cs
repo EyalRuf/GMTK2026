@@ -17,6 +17,8 @@ namespace NineLives
         Vector3 ridingPlatformLastPos;
         float airborneApexY;
         float hardLandingTimer;
+        float footstepTimer;
+        const float FootstepInterval = 0.26f;
         public bool Grounded { get; private set; }
         public Vector2 Velocity => motor.Velocity;
         public Vector3 FeetPosition => transform.position;
@@ -25,6 +27,8 @@ namespace NineLives
         public bool LandedThisStep { get; private set; }
         public bool HardLandedThisStep { get; private set; }
         public bool IsHardLanding => hardLandingTimer > 0f;
+        public bool Charging => motor.Charging;
+        public bool ChargedJumpThisStep { get; private set; }
         public float SpeedMultiplier = 1f;
         public float JumpMultiplier = 1f;
 
@@ -114,7 +118,15 @@ namespace NineLives
             if (grounded) airborneApexY = transform.position.y;
 
             JumpedThisStep = motor.JumpedThisStep;
+            ChargedJumpThisStep = motor.JumpedThisStep && motor.JumpWasCharged;
             Grounded = motor.Grounded;
+
+            // Raise presentation events at the decoupling boundary — FXManager / the animator
+            // driver listen; nothing here knows about particles, clips or sounds.
+            if (JumpedThisStep) GameEvents.RaiseJumped(FeetPosition);
+            if (HardLandedThisStep) GameEvents.RaiseHardLanded(FeetPosition);
+            else if (LandedThisStep) GameEvents.RaiseLanded(FeetPosition);
+            TickFootsteps(dt);
 
             var v = new Vector3(motor.Velocity.x, motor.Velocity.y, 0f);
             cc.Move(v * dt);
@@ -132,6 +144,20 @@ namespace NineLives
                     mesh.localScale.y, mesh.localScale.z);
 
             wasGrounded = grounded;
+        }
+
+        void TickFootsteps(float dt)
+        {
+            if (Grounded && Mathf.Abs(motor.Velocity.x) > 1f)
+            {
+                footstepTimer -= dt;
+                if (footstepTimer <= 0f)
+                {
+                    GameEvents.RaiseFootstep(FeetPosition);
+                    footstepTimer = FootstepInterval;
+                }
+            }
+            else footstepTimer = 0f;
         }
 
         bool Probe(out bool onTrampoline, out MovingPlatform platform)

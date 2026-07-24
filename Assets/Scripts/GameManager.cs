@@ -54,7 +54,8 @@ namespace NineLives
         Vector3 lastDeathFeet;
         bool lastDeathUnrecoverable;
 
-        AudioClip sJump, sBounce, sDeath, sPlate, sLand, sWin, sFail, sTick;
+        // Jump/land/death SFX moved to FXManager (event-driven). Bounce/plate/win/fail/tick stay here.
+        AudioClip sBounce, sPlate, sWin, sFail, sTick;
 
         void Start()
         {
@@ -99,10 +100,9 @@ namespace NineLives
 
             audio = gameObject.AddComponent<AudioSource>();
             audio.playOnAwake = false;
-            sJump = ProceduralAudio.Jump(); sBounce = ProceduralAudio.Bounce();
-            sDeath = ProceduralAudio.Death(); sPlate = ProceduralAudio.Plate();
-            sLand = ProceduralAudio.Land(); sWin = ProceduralAudio.Win();
-            sFail = ProceduralAudio.Fail(); sTick = ProceduralAudio.Tick();
+            sBounce = ProceduralAudio.Bounce(); sPlate = ProceduralAudio.Plate();
+            sWin = ProceduralAudio.Win(); sFail = ProceduralAudio.Fail();
+            sTick = ProceduralAudio.Tick();
 
             menu.BuildUI(config, levels, audio, musicSource, OnMenuLevelChosen, OnMenuResume, OnMenuBackToMenu);
         }
@@ -164,6 +164,7 @@ namespace NineLives
             if (config.respawnAtDeathSpot && hasDiedThisLevel && !lastDeathUnrecoverable)
                 spawnFeet = ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
             player.Spawn(spawnFeet);
+            GameEvents.RaiseLevelEntered(spawnFeet);
             cam.Snap();
             timerStarted = false;
             graceLeft = config.respawnGrace;
@@ -262,9 +263,9 @@ namespace NineLives
             var mi = new MotorInput { Move = input.Move, JumpPressed = input.JumpPressed, JumpHeld = input.JumpHeld, JumpReleased = input.JumpReleased };
             player.Tick(mi, dt);
 
-            if (player.JumpedThisStep) audio.PlayOneShot(sJump);
+            // Jump / land SFX+VFX now flow through GameEvents -> FXManager (raised in
+            // PlayerController). Bounce isn't part of the FX spec, so it stays here.
             if (player.BouncedThisStep) audio.PlayOneShot(sBounce);
-            if (player.LandedThisStep) audio.PlayOneShot(sLand, 0.7f);
 
             if (!allowDeath) return;
 
@@ -347,8 +348,11 @@ namespace NineLives
             // corpse so its clearance search doesn't treat the dying player as an obstacle to
             // dodge around — it can land right on the death spot instead of nearby.
             player.gameObject.SetActive(false);
+            // Recoverable death (sacrifice / natural timeout) = soul-leaves-body sequence;
+            // environmental death = poof. SpawnCorpse raises CorpseSpawned when a body appears.
+            if (unrecoverable) GameEvents.RaisePoofDeath(lastDeathFeet);
+            else GameEvents.RaiseSacrificeDeath(lastDeathFeet);
             if (spawnCorpse) SpawnCorpse(lastDeathFeet, deathVelocity, kind);
-            audio.PlayOneShot(sDeath);
             timer.Stop();
             timerStarted = false;
             livesLeft--;
@@ -368,6 +372,7 @@ namespace NineLives
         void OnExitReached()
         {
             if (state != State.Playing && state != State.Intro) return;
+            GameEvents.RaiseLevelExited(player.FeetPosition);
             audio.PlayOneShot(sWin);
             timer.Stop();
             bool last = levelIndex + 1 >= levels.Count;
@@ -444,6 +449,7 @@ namespace NineLives
             go.transform.position = resolved;
             go.SetActive(true);
             corpse.Init(config, vel, kind);
+            GameEvents.RaiseCorpseSpawned(resolved);
         }
 
         /// Reuse a disabled pooled corpse, or grow the pool by one. Corpses are the only

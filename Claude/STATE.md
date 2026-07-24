@@ -81,6 +81,37 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
     `Snap`, HUD via `SetLevel`/`BuildSouls`, timer via `Restart`. Sun light + ambient are scene
     settings now, not built in code.
 
+## FX + animation foundation (placeholder hooks, ready for a polish pass)
+
+Event-driven so effects never live inside gameplay logic. Gameplay only *raises* events; the
+presentation layer *listens*.
+
+- **`GameEvents.cs`** — static hub, the decoupling boundary. Events: Footstep, Jumped, Landed,
+  HardLanded, SacrificeDeath, CorpseSpawned, PoofDeath, LevelEntered, LevelExited, plus throw
+  hooks (ChargeStarted, Thrown) that nothing raises yet (mechanic unbuilt). Raised from
+  `PlayerController` (jump/land/hardland/footstep-cadence) and `GameManager` (deaths → soul vs
+  poof, corpse spawn, level entry/exit).
+- **`FXManager.cs`** (scene object `FXManager`) — the only place events become effects. Subscribes
+  to all events, spawns a pooled placeholder `OneShotVFX` particle at the event position and plays
+  the matching SFX. Ten VFX prefab fields wired in-scene → `Assets/VFX/FX_*.prefab` (shared
+  `Mat_VFX`, Sprites/Default). SFX come from new `ProceduralAudio` placeholder tones.
+- **Jump/land/death SFX moved out of `GameManager`** into FXManager (via events) — no double-play.
+  Bounce/plate/win/fail/tick still play in GameManager (not part of the FX spec).
+- **`PlayerAnimator.controller`** (`Assets/Animations/`) — 14 placeholder states (Idle1 default,
+  Idle2, Movement, QuickJump, ChargingJump, JumpRelease, Falling, HardLanding, CorpseState,
+  DeathRespawn, LevelEntry, LevelExit, HoldToThrow, Throw) + params + a working transition
+  skeleton. Clips are **empty** (they key a non-existent child, so they have length but move
+  nothing → don't fight PlayerController's own scale/facing). Author real motion into
+  `Assets/Animations/Clips/Anim_*.anim` later.
+- **`PlayerAnimatorDriver.cs`** (on Player) — sets Speed/Grounded/Charging/Falling every frame and
+  fires triggers off GameEvents. Exposes `AnimEvent_*` methods to wire as animation events on the
+  real clips later (drive footstep/land/jump off the animation instead of physics).
+- **Known limitation**: `Die()` deactivates the player *before* raising death events, so the
+  animator's Die/Corpse triggers are missed (the driver is disabled) — fine for now since the
+  player is invisible during death; FXManager (always active) still plays the death VFX/SFX. To
+  play a death animation on the player later, raise the death event before deactivating.
+- **Not yet playtested in Play mode** — compiles clean, all refs verified wired via CLI.
+
 ## Everything visualized is now a prefab/material asset (drag-and-drop art later)
 
 Prompted by the user: anything a future art pass would touch needs to be an Inspector-editable
@@ -135,6 +166,8 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 3. Playtest feel; tune `GameConfig` (speed, jumpHeight, timeToApex, per-level Timer).
 4. Confirm each level is solvable as intended; adjust in the Editor via the level prefabs.
 5. Juice: squash/stretch, death poof particle, screen shake — Sunday-only per CLAUDE.md.
+   FX/animation hooks now exist (see FX section) — polish = filling `Anim_*.anim` clips and the
+   `FX_*` particle prefabs with real art, no new plumbing needed.
 
 ## Decisions already made — don't re-litigate
 
@@ -183,6 +216,10 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/ILevelResettable.cs` | `ResetToInitial()` contract for level content; GameManager walks it on level (re)entry. |
 | `Assets/Scripts/LevelRoot.cs` | Marks a level's root; entry/exit/timer/name/hint. |
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
+| `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
+| `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |
+| `Assets/Scripts/PlayerAnimatorDriver.cs` | Drives `PlayerAnimator.controller` from player state. |
+| `Assets/Animations/` / `Assets/VFX/` | Placeholder controller/clips + particle prefabs (swap for art). |
 | `Assets/Scripts/HUD.cs` / `PauseMenu.cs` (class `MenuUI`) | Data-bound UI logic; visuals live in `HUD.prefab` / `MenuUI.prefab`. |
 | `Assets/Prefabs/*.prefab` | Draggable building blocks + Player/Corpse/HUD/MenuUI/Upgrade_*. |
 | `Assets/Materials/*.mat` | All palette materials — swap these for real art later. |

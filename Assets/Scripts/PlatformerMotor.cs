@@ -21,6 +21,8 @@ namespace NineLives
         public Vector2 Velocity;
         public bool Grounded { get; private set; }
         public bool JumpedThisStep { get; private set; }
+        public bool Charging { get; private set; }
+        public bool JumpWasCharged { get; private set; }
 
         float coyote;
         float chargeElapsed;
@@ -52,6 +54,7 @@ namespace NineLives
         public void Tick(float dt, MotorInput input, bool grounded)
         {
             JumpedThisStep = false;
+            JumpWasCharged = false;
             Grounded = grounded;
 
             coyote = grounded ? cfg.coyoteTime : coyote - dt;
@@ -73,6 +76,7 @@ namespace NineLives
             }
 
             bool charging = chargingActive && grounded && input.JumpHeld;
+            Charging = charging;
 
             Velocity.x = charging
                 ? 0f
@@ -132,6 +136,7 @@ namespace NineLives
             Grounded = false;
             coyote = 0f;
             JumpedThisStep = true;
+            JumpWasCharged = charge > 0.01f;
         }
 
         float StepHorizontal(float dt, float move, bool grounded, float speedMultiplier)
