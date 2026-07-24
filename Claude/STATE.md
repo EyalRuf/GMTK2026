@@ -55,6 +55,18 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   (locked levels greyed out unless `GameConfig.unlockAllLevelsForTesting`), Settings (master/
   music/effects volume sliders, saved + applied live). Pause (Esc) adds Continue/Level
   Select/Settings/Back to Menu, sharing the same Level Select and Settings screens.
+- **Parallax** — `ParallaxLayer.cs`: reusable component, one per visual layer. Multiplier is
+  apparent on-screen movement vs the play surface: `1` = moves 1:1 with camera (world-static),
+  `>1` foreground, `<1` background, `0` pinned to camera. Per-axis enable + H/V multipliers, all
+  Inspector-tunable. Anchors on the first active frame (after the camera snaps) and re-anchors on
+  `OnEnable`, so each level is independent and layers can be duplicated freely; no reset
+  registration needed. Uses `Camera.main` unless a `cameraTransform` is set. Every level prefab now
+  has a `Parallax` child (centered on the level's bounds) holding 5 instances of
+  `Assets/Prefabs/ParallaxLayer.prefab` — `Foreground_1/2` (Z −6/−3, mult 1.3/1.15, low-alpha
+  tints so gameplay shows through) and `Background_1/2/3` (Z 8/16/28, mult 0.75/0.5/0.3). Depth
+  ordering is by world Z under the perspective camera (transparent sprites sort by camera distance,
+  and level geometry occludes backgrounds via the depth buffer). Layers share
+  `Assets/Sprites/Parallax/Parallax_Placeholder.png` (swap each layer's sprite for real art later).
 - **HUD** — `HUD.cs`: level label, big timer + bar, lives pips, hint, banners.
 - **Audio** — `ProceduralAudio.cs`: all SFX generated in code (jump/bounce/death/plate/win/etc).
   Background music now works: `GameManager.musicSource` (public `AudioSource` field, assigned +
@@ -220,6 +232,7 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/ILevelResettable.cs` | `ResetToInitial()` contract for level content; GameManager walks it on level (re)entry. |
 | `Assets/Scripts/LevelRoot.cs` | Marks a level's root; entry/exit/timer/name/hint. |
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
+| `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |
 | `Assets/Scripts/PlayerAnimatorDriver.cs` | Drives `PlayerAnimator.controller` from player state. |
