@@ -9,6 +9,7 @@ namespace NineLives
         public float Move;
         public bool JumpPressed;
         public bool JumpHeld;
+        public bool JumpReleased;
         public bool SacrificePressed;
         public bool RestartPressed;
         public bool CarryTogglePressed;
@@ -22,7 +23,7 @@ namespace NineLives
         public void Sample()
         {
             Move = 0f;
-            JumpPressed = JumpHeld = SacrificePressed = RestartPressed = false;
+            JumpPressed = JumpHeld = JumpReleased = SacrificePressed = RestartPressed = false;
             CarryTogglePressed = ThrowPressed = false;
             PausePressed = PrevLevelPressed = NextLevelPressed = false;
 
@@ -33,6 +34,7 @@ namespace NineLives
                 if (k.dKey.isPressed || k.rightArrowKey.isPressed) Move += 1f;
                 JumpPressed |= k.spaceKey.wasPressedThisFrame || k.wKey.wasPressedThisFrame || k.upArrowKey.wasPressedThisFrame;
                 JumpHeld |= k.spaceKey.isPressed || k.wKey.isPressed || k.upArrowKey.isPressed;
+                JumpReleased |= k.spaceKey.wasReleasedThisFrame || k.wKey.wasReleasedThisFrame || k.upArrowKey.wasReleasedThisFrame;
                 SacrificePressed |= k.qKey.wasPressedThisFrame || k.eKey.wasPressedThisFrame || k.leftShiftKey.wasPressedThisFrame;
                 RestartPressed |= k.rKey.wasPressedThisFrame;
                 PausePressed |= k.escapeKey.wasPressedThisFrame;
@@ -47,6 +49,7 @@ namespace NineLives
                 if (Mathf.Abs(stick) > 0.2f) Move += stick;
                 JumpPressed |= g.buttonSouth.wasPressedThisFrame;
                 JumpHeld |= g.buttonSouth.isPressed;
+                JumpReleased |= g.buttonSouth.wasReleasedThisFrame;
                 SacrificePressed |= g.buttonWest.wasPressedThisFrame || g.buttonNorth.wasPressedThisFrame;
                 RestartPressed |= g.selectButton.wasPressedThisFrame;
                 CarryTogglePressed |= g.rightShoulder.wasPressedThisFrame;

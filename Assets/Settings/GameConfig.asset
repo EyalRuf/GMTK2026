@@ -17,15 +17,19 @@ MonoBehaviour:
   groundDeceleration: 110
   airAcceleration: 55
   airDeceleration: 25
-  turnBoost: 2
-  jumpHeight: 3.5
-  timeToApex: 0.4
-  fallGravityMultiplier: 1.8
-  jumpCutGravityMultiplier: 3.2
-  maxFallSpeed: 26
+  turnBoost: 1.2
+  baseJumpHeight: 1.5
+  jumpHeight: 3.85
+  jumpHoldTime: 0.8
+  timeToApex: 0.36
+  fallGravityMultiplier: 1.75
+  maxFallSpeed: 25
   coyoteTime: 0.12
   jumpBuffer: 0.12
-  playerHeight: 1.2
+  hardLandingMinFallHeight: 4.5
+  hardLandingSpeedMultiplier: 0
+  hardLandingRecoveryTime: 0.5
+  playerHeight: 1.3
   playerRadius: 0.35
   groundProbeDepth: 0.12
   corpseSize: {x: 1.05, y: 1.2, z: 1.2}
@@ -38,7 +42,7 @@ MonoBehaviour:
   trampolinePlayerJumpMultiplier: 1.35
   carryPickupRange: 2.2
   carrySpeedMultiplier: 0.55
-  carryThrowSpeed: 14
+  carryThrowSpeed: 18
   carryHoldHeight: 1.6
   carryTrajectorySegments: 20
   carryTrajectoryTime: 1.2
@@ -47,10 +51,10 @@ MonoBehaviour:
   respawnAtDeathSpot: 1
   respawnOffsetX: 1.5
   isTimedCorpseSpawn: 0
-  showTimerSeconds: 0
+  showTimerSeconds: 1
   cameraOffset: {x: 0, y: 1.5, z: -15}
   cameraSmoothing: 0.16
-  cameraLookAhead: 0.25
+  cameraLookAhead: 0.2
   unlockAllLevelsForTesting: 1
   killPlaneY: -25
   levelDepth: 3

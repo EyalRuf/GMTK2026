@@ -277,7 +277,7 @@ namespace NineLives
         void TickPlayer(float dt, bool allowDeath)
         {
             corpseCarry.Sample(input);
-            var mi = new MotorInput { Move = input.Move, JumpPressed = input.JumpPressed, JumpHeld = input.JumpHeld };
+            var mi = new MotorInput { Move = input.Move, JumpPressed = input.JumpPressed, JumpHeld = input.JumpHeld, JumpReleased = input.JumpReleased };
             player.Tick(mi, dt);
 
             if (player.JumpedThisStep) audio.PlayOneShot(sJump);

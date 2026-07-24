@@ -7,6 +7,7 @@ namespace NineLives
         public float Move;
         public bool JumpPressed;
         public bool JumpHeld;
+        public bool JumpReleased;
         public float SpeedMultiplier;
         public float JumpMultiplier;
     }
@@ -22,7 +23,12 @@ namespace NineLives
         public bool JumpedThisStep { get; private set; }
 
         float coyote;
-        float buffer;
+        float chargeElapsed;
+        bool chargingActive;
+
+        bool pendingRelease;
+        float pendingReleaseCharge;
+        float pendingReleaseTimer;
 
         public PlatformerMotor(GameConfig config) { cfg = config; }
 
@@ -31,7 +37,9 @@ namespace NineLives
             Velocity = Vector2.zero;
             Grounded = false;
             coyote = 0f;
-            buffer = 0f;
+            chargeElapsed = 0f;
+            chargingActive = false;
+            pendingRelease = false;
         }
 
         public void Bounce(float upwardSpeed)
@@ -47,29 +55,83 @@ namespace NineLives
             Grounded = grounded;
 
             coyote = grounded ? cfg.coyoteTime : coyote - dt;
-            buffer = input.JumpPressed ? cfg.jumpBuffer : buffer - dt;
 
             // Settle onto the floor so the ground probe keeps finding it.
             if (grounded && Velocity.y < 0f) Velocity.y = -2f;
 
-            Velocity.x = StepHorizontal(dt, input.Move, grounded, input.SpeedMultiplier);
+            float jumpMult = input.JumpMultiplier <= 0f ? 1f : input.JumpMultiplier;
+            bool wantsMove = Mathf.Abs(input.Move) > 0.01f;
 
-            if (buffer > 0f && coyote > 0f)
+            // Moving when jump is pressed: fire the base jump immediately, no charging.
+            // Stationary: start charging and wait for release to fire.
+            if (input.JumpPressed && (grounded || coyote > 0f))
             {
-                float jumpMult = input.JumpMultiplier <= 0f ? 1f : input.JumpMultiplier;
-                Velocity.y = cfg.JumpVelocity * jumpMult;
-                buffer = 0f;
-                coyote = 0f;
-                Grounded = false;
-                JumpedThisStep = true;
+                if (wantsMove)
+                    Fire(0f, jumpMult);
+                else
+                    chargingActive = true;
             }
 
-            float g = cfg.JumpGravity;
-            if (Velocity.y > 0f && !input.JumpHeld) g *= cfg.jumpCutGravityMultiplier;
-            else if (Velocity.y < 0f) g *= cfg.fallGravityMultiplier;
+            bool charging = chargingActive && grounded && input.JumpHeld;
 
-            Velocity.y -= g * dt;
+            Velocity.x = charging
+                ? 0f
+                : StepHorizontal(dt, input.Move, grounded, input.SpeedMultiplier);
+
+            // chargeElapsed is cleared explicitly after each Fire() — don't also clear it here,
+            // that would race the JumpReleased check below and always yield a 0 charge.
+            if (charging)
+                chargeElapsed = Mathf.Min(chargeElapsed + dt, cfg.jumpHoldTime);
+            else if (!grounded)
+                chargeElapsed = 0f; // no storing a charged jump for later use in the air
+
+            if (input.JumpReleased && chargingActive)
+            {
+                if (grounded || coyote > 0f)
+                {
+                    Fire(chargeElapsed, jumpMult);
+                }
+                else
+                {
+                    pendingRelease = true;
+                    pendingReleaseCharge = chargeElapsed;
+                    pendingReleaseTimer = cfg.jumpBuffer;
+                }
+                chargeElapsed = 0f;
+                chargingActive = false;
+            }
+
+            if (pendingRelease)
+            {
+                if (grounded)
+                {
+                    Fire(pendingReleaseCharge, jumpMult);
+                    pendingRelease = false;
+                }
+                else
+                {
+                    pendingReleaseTimer -= dt;
+                    if (pendingReleaseTimer <= 0f) pendingRelease = false;
+                }
+            }
+
+            if (!JumpedThisStep)
+            {
+                float g = cfg.JumpGravity;
+                if (Velocity.y < 0f) g *= cfg.fallGravityMultiplier;
+                Velocity.y -= g * dt;
+            }
+
             if (Velocity.y < -cfg.maxFallSpeed) Velocity.y = -cfg.maxFallSpeed;
+        }
+
+        void Fire(float charge, float jumpMult)
+        {
+            float t = Mathf.Clamp01(charge / cfg.jumpHoldTime);
+            Velocity.y = Mathf.Lerp(cfg.BaseJumpVelocity, cfg.MaxJumpVelocity, t) * jumpMult;
+            Grounded = false;
+            coyote = 0f;
+            JumpedThisStep = true;
         }
 
         float StepHorizontal(float dt, float move, bool grounded, float speedMultiplier)

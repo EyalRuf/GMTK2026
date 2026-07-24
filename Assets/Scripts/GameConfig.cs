@@ -16,19 +16,29 @@ namespace NineLives
         public float turnBoost = 2f;
 
         [Header("Jump")]
-        [Tooltip("Peak height in world units of a full-held jump from flat ground.")]
+        [Tooltip("Height of a jump released with no charge (instant tap).")]
+        public float baseJumpHeight = 1.4f;
+        [Tooltip("Peak height reached by charging jump for jumpHoldTime seconds before releasing.")]
         public float jumpHeight = 3.5f;
-        [Tooltip("Seconds from leaving the ground to the top of the arc. Lower = heavier, punchier.")]
+        [Tooltip("How long the player can charge jump (holding, before release) to gain height, in seconds.")]
+        public float jumpHoldTime = 1.5f;
+        [Tooltip("Seconds from leaving the ground to the top of the arc (at max jump height). Lower = heavier, punchier.")]
         public float timeToApex = 0.4f;
         [Tooltip("Gravity multiplier while falling. >1 makes the fall snappier than the rise.")]
         public float fallGravityMultiplier = 1.8f;
-        [Tooltip("Gravity multiplier while rising with jump released. Gives variable jump height.")]
-        public float jumpCutGravityMultiplier = 3.2f;
         public float maxFallSpeed = 26f;
         [Tooltip("Grace period after walking off a ledge where jump still works.")]
         public float coyoteTime = 0.12f;
-        [Tooltip("How early a jump press is remembered before landing.")]
+        [Tooltip("How early a jump release is remembered before landing.")]
         public float jumpBuffer = 0.12f;
+
+        [Header("Hard Landing")]
+        [Tooltip("Minimum height fallen (world units) before a landing triggers the hard-landing slowdown.")]
+        public float hardLandingMinFallHeight = 6f;
+        [Tooltip("Movement speed multiplier applied immediately on a hard landing (1 = no slowdown).")]
+        public float hardLandingSpeedMultiplier = 0.4f;
+        [Tooltip("Seconds to recover from the hard-landing slowdown back to normal speed.")]
+        public float hardLandingRecoveryTime = 0.5f;
 
         [Header("Body")]
         public float playerHeight = 1.2f;
@@ -94,8 +104,9 @@ namespace NineLives
         [Tooltip("Z thickness of every greybox block.")]
         public float levelDepth = 3f;
 
-        // Derived — the two numbers the motor actually uses.
+        // Derived — the numbers the motor actually uses.
         public float JumpGravity => 2f * jumpHeight / (timeToApex * timeToApex);
-        public float JumpVelocity => 2f * jumpHeight / timeToApex;
+        public float MaxJumpVelocity => Mathf.Sqrt(2f * JumpGravity * jumpHeight);
+        public float BaseJumpVelocity => Mathf.Sqrt(2f * JumpGravity * baseJumpHeight);
     }
 }
