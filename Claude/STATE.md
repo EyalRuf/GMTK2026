@@ -67,6 +67,16 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   ordering is by world Z under the perspective camera (transparent sprites sort by camera distance,
   and level geometry occludes backgrounds via the depth buffer). Layers share
   `Assets/Sprites/Parallax/Parallax_Placeholder.png` (swap each layer's sprite for real art later).
+- **Lava waterfall** — `LavaWaterfall.cs` (`ExecuteAlways`) + `Assets/Prefabs/LavaWaterfall.prefab`.
+  Drag the prefab into a level; the root raycasts down (`hitMask`/`castRadius`/`maxLength`) and
+  stretches the `Stream` quad to the hit distance, feeding the world length into the shader via a
+  `MaterialPropertyBlock` (`_Length`) so flow density stays constant at any height. `NineLives/
+  LavaWaterfall` shader (`Mat_LavaWaterfall`) is procedural (no textures): downward fbm flow,
+  distortion, HDR emission, soft side/top/bottom alpha fades (wobbly dissolving bottom, no clip),
+  edge glow — all Inspector-tunable. The `Splash` child particle system snaps to the exact impact
+  point (`NineLives/LavaSplash` additive sprite shader / `Mat_LavaSplash`) and disables itself when
+  nothing is hit. Angle a fall by rotating the root; set `updateInterval` >0 or leave 0 for
+  per-frame recast (moving floors). Not yet placed in any level or playtested in Play mode.
 - **HUD** — `HUD.cs`: level label, big timer + bar, lives pips, hint, banners.
 - **Audio** — `ProceduralAudio.cs`: all SFX generated in code (jump/bounce/death/plate/win/etc).
   Background music now works: `GameManager.musicSource` (public `AudioSource` field, assigned +
