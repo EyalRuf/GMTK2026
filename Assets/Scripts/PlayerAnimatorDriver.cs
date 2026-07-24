@@ -11,9 +11,11 @@ namespace NineLives
     /// transitions fire (watch it in the Animator window), but nothing moves the mesh yet, so it
     /// doesn't fight PlayerController's own scale/facing. When real clips are authored, wire their
     /// animation events to the AnimEvent_* methods here to drive VFX/SFX off the animation itself.
-    [RequireComponent(typeof(Animator))]
     public class PlayerAnimatorDriver : MonoBehaviour
     {
+        [Tooltip("Animator on the cat art child. Assign in the prefab; falls back to any Animator in children.")]
+        [SerializeField] Animator anim;
+
         [Tooltip("Seconds standing still before the secondary idle (lick/stretch) plays.")]
         [SerializeField] float idle2Delay = 4f;
 
@@ -34,14 +36,13 @@ namespace NineLives
         static readonly int tThrow = Animator.StringToHash("Throw");
         static readonly int tChargeThrow = Animator.StringToHash("ChargeThrow");
 
-        Animator anim;
         PlayerController player;
         float idleTimer;
         bool idle2Fired;
 
         void Awake()
         {
-            anim = GetComponent<Animator>();
+            if (anim == null) anim = GetComponentInChildren<Animator>();
             player = GetComponent<PlayerController>();
         }
 
