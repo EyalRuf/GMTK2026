@@ -61,9 +61,25 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   wired on the scene's `GameManager`) is set to loop and starts playing in `Start()`, volume
   driven by `SaveData.MusicVolume` and the Settings music slider (`MenuUI.BuildUI` now takes a
   `music` `AudioSource` param alongside `sfx`, live-updates `.volume` on slider change).
-- **Scene** — `Assets/Scenes/Game.unity`: one `Game` object w/ `GameManager` + `GameConfig` +
-  `levelPrefabs`. Camera, light, audio and level-clear/menu flow are built at runtime; the
-  **player, corpse, HUD and menu are now real prefabs** (below), not runtime-built primitives.
+- **Scene is now the source of truth (scene-based architecture)** — `Assets/Scenes/Game.unity`
+  holds every persistent object pre-placed, each on its own root: `GameManager`, `MainCamera`,
+  `Player` (starts disabled, has `CorpseCarry`), `HUD` (disabled), `MenuUI`, `Sun`, `Corpses`
+  (corpse-pool parent), and `Levels` → all 8 level prefab-instances (spaced 300u apart on X, all
+  disabled). Nothing is instantiated/destroyed at runtime except pooled corpses. `GameManager`
+  fields (`player`/`cam`/`hud`/`menu`/`levels[]`/`corpseRoot`/`corpsePrefab`) are scene refs.
+  Level switching = disable all, enable the target, reset it. `StartLevel` walks the level's
+  `GetComponentsInChildren<ILevelResettable>(true)` and calls `ResetToInitial()`.
+  - **`ILevelResettable`** (`ILevelResettable.cs`) — implemented by `MovingPlatform`,
+    `LinkedMover`, `PressurePlate`, `UpgradePickup`, `LevelExit`. Restores each back to its
+    `Awake`-captured authored state (position, closed gate, released plate, un-taken pickup,
+    un-triggered exit) — the reset Destroy/Instantiate used to give for free.
+  - **Corpses are pooled** under `Corpses`: `GameManager.GetPooledCorpse()` reuses a disabled one
+    or grows the pool (bounded by `livesPerLevel`); `ClearCorpses()` disables them all;
+    `Corpse.Init()` now fully resets state so a reused corpse comes back clean. Positioned while
+    inactive so activation starts PhysX fresh at the death spot (no sweep-through-floor).
+  - Globals reset for free via the existing `StartLevel` path: player via `Spawn`, camera via
+    `Snap`, HUD via `SetLevel`/`BuildSouls`, timer via `Restart`. Sun light + ambient are scene
+    settings now, not built in code.
 
 ## Everything visualized is now a prefab/material asset (drag-and-drop art later)
 
@@ -95,8 +111,13 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 
 ## Half-done / known broken
 
-- Not yet playtested in the Editor since the menu + asset-ification pass — compiles clean, no
-  console errors, all prefab fields verified wired via the CLI, but no one has clicked through
+- **Scene-based architecture not yet playtested in Play mode** — compiles clean, all scene refs
+  verified wired via the CLI, but nobody has entered Play mode since the conversion. Highest-risk
+  spots to watch: (1) corpse pooling physics (reused corpse settling correctly at the death spot,
+  no leftover kinematic/collider state); (2) level reset on restart / re-entry (platforms, gates,
+  plates, taken pickups all returning to authored state); (3) globals (HUD/camera) showing the
+  right per-level state with no carryover.
+- Not yet playtested since the menu + asset-ification pass either — no one has clicked through
   Start → Level Select → Settings → Pause → Back to Menu in Play mode yet.
 - **Upgrade pickups aren't placed in any level yet** — the prefabs exist but no level has one
   dragged in. Needs an Editor pass to actually place them where they're meant to teach/solve.
@@ -158,7 +179,8 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/SaveData.cs` | PlayerPrefs-backed progress + volume settings. |
 | `Assets/Scripts/PlatformerMotor.cs` | Pure movement math, no Unity deps. |
 | `Assets/Scripts/PlayerController.cs` | CharacterController + motor + corpse bounce; visual is `Player.prefab`. |
-| `Assets/Scripts/GameManager.cs` | Flow: menu state, lives, countdown, corpses; instantiates level/player/corpse/HUD/menu prefabs. |
+| `Assets/Scripts/GameManager.cs` | Flow: menu state, lives, countdown; enables/disables/resets pre-placed scene objects; pools corpses. |
+| `Assets/Scripts/ILevelResettable.cs` | `ResetToInitial()` contract for level content; GameManager walks it on level (re)entry. |
 | `Assets/Scripts/LevelRoot.cs` | Marks a level's root; entry/exit/timer/name/hint. |
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
 | `Assets/Scripts/HUD.cs` / `PauseMenu.cs` (class `MenuUI`) | Data-bound UI logic; visuals live in `HUD.prefab` / `MenuUI.prefab`. |

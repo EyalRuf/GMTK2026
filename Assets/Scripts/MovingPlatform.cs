@@ -7,7 +7,7 @@ namespace NineLives
     /// With no plates linked it moves continuously; with plates linked it only moves while any
     /// plate in the list is pressed, and holds still otherwise. Player carrying is handled by
     /// PlayerController tracking this platform's position delta while grounded on it.
-    public class MovingPlatform : MonoBehaviour
+    public class MovingPlatform : MonoBehaviour, ILevelResettable
     {
         [Tooltip("World-space offset of the far end of the platform's path from its start position.")]
         public Vector3 moveOffset = new Vector3(4f, 0f, 0f);
@@ -45,6 +45,13 @@ namespace NineLives
                 movingToEnd = !movingToEnd;
                 waitTimer = waitTime;
             }
+        }
+
+        public void ResetToInitial()
+        {
+            transform.position = startPos;
+            movingToEnd = true;
+            waitTimer = 0f;
         }
 
         bool AnyPlatePressed()

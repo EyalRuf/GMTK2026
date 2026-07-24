@@ -15,12 +15,16 @@ namespace NineLives
         bool wasGrounded;
         MovingPlatform ridingPlatform;
         Vector3 ridingPlatformLastPos;
+        float airborneApexY;
+        float hardLandingTimer;
         public bool Grounded { get; private set; }
         public Vector2 Velocity => motor.Velocity;
         public Vector3 FeetPosition => transform.position;
         public bool JumpedThisStep { get; private set; }
         public bool BouncedThisStep { get; private set; }
         public bool LandedThisStep { get; private set; }
+        public bool HardLandedThisStep { get; private set; }
+        public bool IsHardLanding => hardLandingTimer > 0f;
         public float SpeedMultiplier = 1f;
         public float JumpMultiplier = 1f;
 
@@ -48,13 +52,24 @@ namespace NineLives
             cc.enabled = true;
             motor.Reset();
             wasGrounded = false;
+            airborneApexY = feet.y;
+            hardLandingTimer = 0f;
             gameObject.SetActive(true);
         }
 
         public void Tick(MotorInput input, float dt)
         {
-            JumpedThisStep = BouncedThisStep = LandedThisStep = false;
-            input.SpeedMultiplier = SpeedMultiplier;
+            JumpedThisStep = BouncedThisStep = LandedThisStep = HardLandedThisStep = false;
+
+            float hardLandingMultiplier = 1f;
+            if (hardLandingTimer > 0f)
+            {
+                hardLandingTimer -= dt;
+                float recoverT = Mathf.Clamp01(hardLandingTimer / cfg.hardLandingRecoveryTime);
+                hardLandingMultiplier = Mathf.Lerp(1f, cfg.hardLandingSpeedMultiplier, recoverT);
+            }
+
+            input.SpeedMultiplier = SpeedMultiplier * hardLandingMultiplier;
             input.JumpMultiplier = JumpMultiplier;
 
             if (ridingPlatform != null)
@@ -71,6 +86,8 @@ namespace NineLives
             bool justLanded = grounded && !wasGrounded && impactVy < 0f;
             bool bounce = justLanded && onTrampoline && impactVy < -cfg.trampolineBounceThreshold;
 
+            if (!wasGrounded) airborneApexY = Mathf.Max(airborneApexY, transform.position.y);
+
             motor.Tick(dt, input, grounded && !bounce);
 
             if (bounce)
@@ -84,6 +101,17 @@ namespace NineLives
             {
                 LandedThisStep = true;
             }
+
+            if (justLanded && !bounce)
+            {
+                float fallHeight = airborneApexY - transform.position.y;
+                if (fallHeight >= cfg.hardLandingMinFallHeight)
+                {
+                    hardLandingTimer = cfg.hardLandingRecoveryTime;
+                    HardLandedThisStep = true;
+                }
+            }
+            if (grounded) airborneApexY = transform.position.y;
 
             JumpedThisStep = motor.JumpedThisStep;
             Grounded = motor.Grounded;

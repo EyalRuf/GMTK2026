@@ -5,7 +5,7 @@ namespace NineLives
     /// Editor-placeable one-time pickup. Touch it to arm the next-corpse upgrade;
     /// it then disappears until the level restarts.
     [RequireComponent(typeof(BoxCollider))]
-    public class UpgradePickup : MonoBehaviour
+    public class UpgradePickup : MonoBehaviour, ILevelResettable
     {
         public UpgradeType upgrade = UpgradeType.Trampoline;
         [Tooltip("Bobs up and down so it reads as a pickup, not a level block.")]
@@ -23,6 +23,13 @@ namespace NineLives
         }
 
         public void Init(System.Action<UpgradeType> callback) { onPickedUp = callback; }
+
+        public void ResetToInitial()
+        {
+            taken = false;
+            transform.localPosition = baseLocalPos;
+            gameObject.SetActive(true);
+        }
 
         void Update()
         {

@@ -4,23 +4,26 @@ using UnityEngine;
 namespace NineLives
 {
     /// Owns game flow: levels, lives, the death countdown, corpses, and the HUD.
-    /// Builds the entire scene (camera, light, player, UI) at runtime — the scene
-    /// only needs one GameObject carrying this component.
+    /// Everything lives in the scene now — player, camera, HUD, menu and all levels are
+    /// pre-placed and enabled/disabled/reset, not instantiated/destroyed at runtime. The
+    /// one exception is corpses, which are pooled under `corpseRoot`.
     public class GameManager : MonoBehaviour
     {
         public GameConfig config;
-        [Tooltip("Drag level prefabs here, in play order. Each needs a LevelRoot component.")]
-        public List<LevelRoot> levelPrefabs = new();
-        [Tooltip("Player prefab: mesh + material + CharacterController + PlayerController.")]
-        public GameObject playerPrefab;
-        [Tooltip("Corpse prefab: mesh + Rigidbody + BoxCollider + Corpse (material variants wired on it).")]
+        [Tooltip("Drag the in-scene level objects here, in play order. Each needs a LevelRoot.")]
+        public List<LevelRoot> levels = new();
+        [Tooltip("Pre-placed Player object in the scene (starts disabled).")]
+        public PlayerController player;
+        [Tooltip("Pre-placed MainCamera object (Camera + CameraFollow).")]
+        public CameraFollow cam;
+        [Tooltip("Pre-placed HUD object (starts disabled).")]
+        public HUD hud;
+        [Tooltip("Pre-placed MenuUI object.")]
+        public MenuUI menu;
+        [Tooltip("Corpse prefab: pooled at runtime under corpseRoot, never destroyed.")]
         public GameObject corpsePrefab;
-        [Tooltip("HUD prefab: Canvas with the level label, timer, lives, hint and banner.")]
-        public GameObject hudPrefab;
-        [Tooltip("MenuUI prefab: main menu, pause, level select and settings screens.")]
-        public GameObject menuPrefab;
-        [Tooltip("Camera prefab: Camera + CameraFollow (and any post-processing you add).")]
-        public GameObject cameraPrefab;
+        [Tooltip("Empty scene object the corpse pool is parented under.")]
+        public Transform corpseRoot;
         [Tooltip("AudioSource for looping background music; volume is driven by the music slider.")]
         public AudioSource musicSource;
 
@@ -34,13 +37,9 @@ namespace NineLives
         LifeTimer timer = new();
         GameObject levelInstanceGo;
         LevelRoot levelInstance;
-        readonly List<GameObject> corpses = new();
+        readonly List<Corpse> corpsePool = new();
 
-        PlayerController player;
         CorpseCarry corpseCarry;
-        CameraFollow cam;
-        HUD hud;
-        MenuUI menu;
         AudioSource audio;
         bool paused;
 
@@ -65,11 +64,13 @@ namespace NineLives
                 Debug.LogWarning("GameManager has no GameConfig assigned; using defaults.");
             }
 
-            if (levelPrefabs.Count == 0)
-                Debug.LogError("GameManager has no level prefabs assigned.");
+            if (levels.Count == 0)
+                Debug.LogError("GameManager has no levels assigned.");
 
             Physics.gravity = new Vector3(0f, -32f, 0f);
-            BuildScene();
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.32f, 0.34f, 0.40f);
+            ConfigureScene();
 
             AudioListener.volume = SaveData.MasterVolume;
             audio.volume = SaveData.SfxVolume;
@@ -80,41 +81,22 @@ namespace NineLives
                 musicSource.Play();
             }
 
+            foreach (var lvl in levels) if (lvl != null) lvl.gameObject.SetActive(false);
             hud.gameObject.SetActive(false);
             player.gameObject.SetActive(false);
             state = State.MainMenu;
             menu.ShowMainMenu();
         }
 
-        void BuildScene()
+        /// Wires the pre-placed scene objects together (no instantiation) and builds SFX.
+        void ConfigureScene()
         {
-            // Camera
-            var camGo = Instantiate(cameraPrefab);
-            camGo.name = "MainCamera";
-            var c = camGo.GetComponent<Camera>();
-            cam = camGo.GetComponent<CameraFollow>();
-
-            // Light
-            var lightGo = new GameObject("Sun");
-            var l = lightGo.AddComponent<Light>();
-            l.type = LightType.Directional;
-            l.intensity = 1.1f;
-            l.color = new Color(1f, 0.97f, 0.9f);
-            lightGo.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.32f, 0.34f, 0.40f);
-
-            // Player
-            var pGo = Instantiate(playerPrefab);
-            pGo.name = "Player";
-            player = pGo.GetComponent<PlayerController>();
             player.Configure(config);
             cam.Configure(config, player);
 
-            corpseCarry = pGo.AddComponent<CorpseCarry>();
-            corpseCarry.Configure(config, player, c);
+            corpseCarry = player.GetComponent<CorpseCarry>();
+            corpseCarry.Configure(config, player, cam.GetComponent<Camera>());
 
-            // Audio
             audio = gameObject.AddComponent<AudioSource>();
             audio.playOnAwake = false;
             sJump = ProceduralAudio.Jump(); sBounce = ProceduralAudio.Bounce();
@@ -122,34 +104,34 @@ namespace NineLives
             sLand = ProceduralAudio.Land(); sWin = ProceduralAudio.Win();
             sFail = ProceduralAudio.Fail(); sTick = ProceduralAudio.Tick();
 
-            // HUD
-            var hudGo = Instantiate(hudPrefab, transform, false);
-            hudGo.name = "HUD";
-            hud = hudGo.GetComponent<HUD>();
-
-            var menuGo = Instantiate(menuPrefab, transform, false);
-            menuGo.name = "MenuUI";
-            menu = menuGo.GetComponent<MenuUI>();
-            menu.BuildUI(config, levelPrefabs, audio, musicSource, OnMenuLevelChosen, OnMenuResume, OnMenuBackToMenu);
+            menu.BuildUI(config, levels, audio, musicSource, OnMenuLevelChosen, OnMenuResume, OnMenuBackToMenu);
         }
 
         void StartLevel(int i)
         {
             levelIndex = i;
             SaveData.HighestUnlockedLevel = Mathf.Max(SaveData.HighestUnlockedLevel, i);
+            if (corpseCarry != null) corpseCarry.DropHeld();
             ClearCorpses();
-            if (levelInstanceGo != null) Destroy(levelInstanceGo);
             livesLeft = config.livesPerLevel;
             hasDiedThisLevel = false;
 
-            var prefab = levelPrefabs[i];
-            levelInstanceGo = Instantiate(prefab.gameObject);
-            levelInstanceGo.name = prefab.name;
-            levelInstance = levelInstanceGo.GetComponent<LevelRoot>();
+            // Enable the chosen level, disable the rest.
+            for (int k = 0; k < levels.Count; k++)
+                if (levels[k] != null) levels[k].gameObject.SetActive(k == i);
+
+            levelInstance = levels[i];
+            levelInstanceGo = levelInstance.gameObject;
+
+            // Wipe every persisting level object back to its authored state (platforms,
+            // gates, plates, pickups, exit) — the reset that Destroy/Instantiate used to give
+            // for free.
+            foreach (var r in levelInstanceGo.GetComponentsInChildren<ILevelResettable>(true))
+                r.ResetToInitial();
 
             var exit = levelInstanceGo.GetComponentInChildren<LevelExit>(true);
             if (exit != null) exit.Init(OnExitReached);
-            else Debug.LogError($"Level prefab '{prefab.name}' has no LevelExit in its children.");
+            else Debug.LogError($"Level '{levelInstance.name}' has no LevelExit in its children.");
 
             foreach (var pickup in levelInstanceGo.GetComponentsInChildren<UpgradePickup>(true))
                 pickup.Init(OnUpgradePickedUp);
@@ -157,7 +139,7 @@ namespace NineLives
             corpseCarry.SetEnabled(false);
             player.JumpMultiplier = 1f;
 
-            hud.SetLevel(levelInstance.levelName, i + 1, levelPrefabs.Count);
+            hud.SetLevel(levelInstance.levelName, i + 1, levels.Count);
             hud.SetLives(livesLeft, config.livesPerLevel);
             hud.SetHint(levelInstance.hint);
 
@@ -227,7 +209,7 @@ namespace NineLives
             }
 
             if (input.PrevLevelPressed && levelIndex > 0) { StartLevel(levelIndex - 1); return; }
-            if (input.NextLevelPressed && levelIndex + 1 < levelPrefabs.Count) { StartLevel(levelIndex + 1); return; }
+            if (input.NextLevelPressed && levelIndex + 1 < levels.Count) { StartLevel(levelIndex + 1); return; }
 
             stateTimer -= dt;
 
@@ -255,7 +237,7 @@ namespace NineLives
                 case State.LevelClear:
                     if (stateTimer <= 0f)
                     {
-                        if (levelIndex + 1 < levelPrefabs.Count) StartLevel(levelIndex + 1);
+                        if (levelIndex + 1 < levels.Count) StartLevel(levelIndex + 1);
                         else EnterWin();
                     }
                     break;
@@ -277,7 +259,7 @@ namespace NineLives
         void TickPlayer(float dt, bool allowDeath)
         {
             corpseCarry.Sample(input);
-            var mi = new MotorInput { Move = input.Move, JumpPressed = input.JumpPressed, JumpHeld = input.JumpHeld };
+            var mi = new MotorInput { Move = input.Move, JumpPressed = input.JumpPressed, JumpHeld = input.JumpHeld, JumpReleased = input.JumpReleased };
             player.Tick(mi, dt);
 
             if (player.JumpedThisStep) audio.PlayOneShot(sJump);
@@ -286,8 +268,31 @@ namespace NineLives
 
             if (!allowDeath) return;
 
-            if (player.FeetPosition.y < config.killPlaneY) Die(unrecoverable: true);
-            else if (input.SacrificePressed) ExpireSoulBoundary(manual: true);
+            if (player.FeetPosition.y < config.killPlaneY) DieAutomatic();
+            else if (input.SacrificePressed) DieManual();
+        }
+
+        /// Manual sacrifice (Q): consumes the current soul/time slot, then respawns next to the corpse.
+        void DieManual()
+        {
+            ConsumeSoul();
+            Die(unrecoverable: false, spawnCorpse: true);
+        }
+
+        /// Environmental death (out of bounds, death zone, or any other automatic trigger): consumes
+        /// the same soul/time slot as a manual sacrifice, but always respawns at the level entry.
+        void DieAutomatic()
+        {
+            ConsumeSoul();
+            Die(unrecoverable: true, spawnCorpse: true);
+        }
+
+        /// Snaps the timer down to the current soul boundary and advances to the next slot — the
+        /// shared soul/time deduction used by every death that isn't a natural timeout.
+        void ConsumeSoul()
+        {
+            timer.SetRemaining(nextBoundary);
+            nextBoundary -= soulInterval;
         }
 
         void UpdateCountdown(float dt)
@@ -307,21 +312,19 @@ namespace NineLives
                 audio.PlayOneShot(sTick, 0.6f);
             lastWholeSecond = whole;
 
-            if (timer.Remaining <= nextBoundary + 0.0001f) ExpireSoulBoundary(manual: false);
+            if (timer.Remaining <= nextBoundary + 0.0001f) ExpireSoulBoundary();
         }
 
-        /// A soul's slot has run out — either the timer reached it (automatic) or the player
-        /// forced it early (manual sacrifice). Manual sacrifice snaps the timer down to the
-        /// boundary immediately, dropping whatever time was left in the current slot.
-        void ExpireSoulBoundary(bool manual)
+        /// A soul's slot has run out naturally (the countdown reached the boundary on its own,
+        /// with no death involved).
+        void ExpireSoulBoundary()
         {
-            if (manual) timer.SetRemaining(nextBoundary);
             nextBoundary -= soulInterval;
 
-            // Automatic timeout with timed spawn off: the soul is consumed silently — no corpse,
-            // no death, no respawn. The player keeps going on the same continuous run; only a real
-            // death (fall/trap) or manual sacrifice ends the current life.
-            if (!manual && !config.isTimedCorpseSpawn)
+            // Timed spawn off: the soul is consumed silently — no corpse, no death, no respawn.
+            // The player keeps going on the same continuous run; only a real death (fall/trap) or
+            // manual sacrifice ends the current life.
+            if (!config.isTimedCorpseSpawn)
             {
                 livesLeft--;
                 hud.SetLives(livesLeft, config.livesPerLevel);
@@ -367,7 +370,7 @@ namespace NineLives
             if (state != State.Playing && state != State.Intro) return;
             audio.PlayOneShot(sWin);
             timer.Stop();
-            bool last = levelIndex + 1 >= levelPrefabs.Count;
+            bool last = levelIndex + 1 >= levels.Count;
             EnterState(State.LevelClear, 1.7f);
             hud.Banner(last ? "FINAL EXIT" : "EXIT!", last ? "" : "Nice.", GreyboxFactory.Exit);
         }
@@ -417,8 +420,9 @@ namespace NineLives
         {
             paused = false;
             Time.timeScale = 1f;
+            if (corpseCarry != null) corpseCarry.DropHeld();
             ClearCorpses();
-            if (levelInstanceGo != null) { Destroy(levelInstanceGo); levelInstanceGo = null; levelInstance = null; }
+            if (levelInstanceGo != null) { levelInstanceGo.SetActive(false); levelInstanceGo = null; levelInstance = null; }
             player.gameObject.SetActive(false);
             hud.gameObject.SetActive(false);
             state = State.MainMenu;
@@ -429,17 +433,30 @@ namespace NineLives
         {
             Vector3 desired = feet + Vector3.up * (config.corpseSize.y * 0.5f);
             Vector3 resolved = ResolveCorpseSpawnClearance(desired, config.corpseSize * 0.5f);
-            // Instantiate directly at the resolved spot rather than moving transform.position
-            // afterward: the prefab's own authored position is near the world origin, and with
-            // Corpse's ContinuousDynamic collision mode, repositioning post-Instantiate makes PhysX
-            // treat the jump as a same-step sweep from that origin to the target — if the sweep
-            // crosses the floor it collides partway and the corpse ends up stuck back near (0,0,0)
-            // instead of at the death spot.
-            var go = Instantiate(corpsePrefab, resolved, Quaternion.identity);
+
+            var corpse = GetPooledCorpse();
+            var go = corpse.gameObject;
             go.name = kind == CorpseKind.Trampoline ? "Corpse_Trampoline" : "Corpse";
             go.transform.localScale = config.corpseSize;
-            go.GetComponent<Corpse>().Init(config, vel, kind);
-            corpses.Add(go);
+            // Position while the pooled object is still inactive: with physics off, activating it
+            // starts the rigidbody fresh at the death spot — no ContinuousDynamic sweep from its
+            // last resting place through the floor (which would leave it stuck mid-level).
+            go.transform.position = resolved;
+            go.SetActive(true);
+            corpse.Init(config, vel, kind);
+        }
+
+        /// Reuse a disabled pooled corpse, or grow the pool by one. Corpses are the only
+        /// runtime-dynamic object; the pool bounds instantiation to at most livesPerLevel ever.
+        Corpse GetPooledCorpse()
+        {
+            foreach (var c in corpsePool)
+                if (c != null && !c.gameObject.activeSelf) return c;
+            var go = Instantiate(corpsePrefab, corpseRoot);
+            go.SetActive(false);
+            var corpse = go.GetComponent<Corpse>();
+            corpsePool.Add(corpse);
+            return corpse;
         }
 
         /// If the naive spawn point overlaps level geometry, PhysX depenetration can fling the
@@ -472,8 +489,7 @@ namespace NineLives
 
         void ClearCorpses()
         {
-            foreach (var c in corpses) if (c) Destroy(c);
-            corpses.Clear();
+            foreach (var c in corpsePool) if (c != null) c.gameObject.SetActive(false);
         }
     }
 }
