@@ -16,6 +16,16 @@ namespace NineLives
         public static AudioClip Fail()    => Arp("sfx_fail", new[] { 440f, 349f, 262f }, 0.4f, 0.4f);
         public static AudioClip Tick()    => Tone("sfx_tick", 1200f, 1200f, 0.04f, 0.25f);
 
+        // Placeholder hooks for the FX layer — swap for real clips later.
+        public static AudioClip Footstep()    => Tone("sfx_footstep", 180f, 130f, 0.05f, 0.18f);
+        public static AudioClip HardLand()     => Tone("sfx_hardland", 150f, 70f, 0.18f, 0.45f);
+        public static AudioClip Soul()         => Arp("sfx_soul", new[] { 784f, 988f, 1319f }, 0.5f, 0.28f);
+        public static AudioClip CorpseSpawn()  => Tone("sfx_corpse", 260f, 130f, 0.22f, 0.4f);
+        public static AudioClip Poof()         => Tone("sfx_poof", 700f, 180f, 0.2f, 0.4f);
+        public static AudioClip LevelEntry()   => Arp("sfx_entry", new[] { 523f, 784f, 1046f }, 0.36f, 0.34f);
+        public static AudioClip LevelExit()    => Arp("sfx_exit", new[] { 659f, 988f, 1319f }, 0.3f, 0.3f);
+        public static AudioClip Throw()        => Tone("sfx_throw", 420f, 720f, 0.14f, 0.35f);
+
         static AudioClip Tone(string name, float f0, float f1, float dur, float vol)
         {
             int n = Mathf.CeilToInt(Rate * dur);

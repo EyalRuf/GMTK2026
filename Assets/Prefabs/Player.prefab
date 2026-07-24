@@ -103,6 +103,8 @@ GameObject:
   - component: {fileID: 7769678478171150078}
   - component: {fileID: 5611440738622355468}
   - component: {fileID: 4512253592936633511}
+  - component: {fileID: 5793961012602501277}
+  - component: {fileID: 6053833670493521934}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -287,6 +289,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1c54c7d764092e4f951a4849f725b3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.CorpseCarry
+--- !u!95 &5793961012602501277
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1882269858412521240}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 45eb1c0dbb6cdfb479ed8a62f69ff0ee, type: 2}
+  m_CullingMode: 1
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &6053833670493521934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1882269858412521240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e554e56941076a54089e2f81d0375a72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NineLives.PlayerAnimatorDriver
+  idle2Delay: 4
 --- !u!1 &8561026419848373830
 GameObject:
   m_ObjectHideFlags: 0
