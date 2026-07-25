@@ -41,14 +41,17 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: BG4
+  - name: BG5
     uniqueID: 3290483923
     locked: 0
-  - name: BG3
+  - name: BG4
     uniqueID: 627467179
     locked: 0
-  - name: BG2
+  - name: BG3
     uniqueID: 3048879163
+    locked: 0
+  - name: BG2
+    uniqueID: 670674373
     locked: 0
   - name: BG1
     uniqueID: 2613592655
