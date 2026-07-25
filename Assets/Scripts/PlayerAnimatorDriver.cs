@@ -93,6 +93,12 @@ namespace NineLives
             anim.SetBool(pCharging, charging);
             anim.SetBool(pFalling, falling);
 
+            // Land is only consumed by the Falling state, so one set on a landing the animator
+            // wasn't in Falling for (quick hop, buffered jump straight off a landing) would sit
+            // pending and yank us out of the *next* fall mid-air. Landed only ever fires on a
+            // grounded frame, so clearing it while airborne can't eat a real one.
+            if (!grounded) anim.ResetTrigger(tLand);
+
             // Secondary idle after standing still long enough; reset the moment anything happens.
             bool idle = grounded && !charging && speed < 0.15f;
             if (idle)
