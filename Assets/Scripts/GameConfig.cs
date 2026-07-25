@@ -94,6 +94,12 @@ namespace NineLives
         public float cameraSmoothing = 0.16f;
         [Tooltip("How far ahead of the player the camera leans, per unit of speed.")]
         public float cameraLookAhead = 0.25f;
+        [Tooltip("Seconds W/S must be held before the camera starts panning up/down.")]
+        public float cameraLookHoldDelay = 0.6f;
+        [Tooltip("How far the camera pans up/down when looking, in world units.")]
+        public float cameraLookDistance = 2.5f;
+        [Tooltip("How fast the look pan eases toward its target offset.")]
+        public float cameraLookSmoothing = 0.2f;
 
         [Header("Testing")]
         [Tooltip("Level Select in the menus lets you pick any level, ignoring reached progress.")]

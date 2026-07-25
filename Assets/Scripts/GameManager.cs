@@ -125,6 +125,10 @@ namespace NineLives
             levelInstance = levels[i];
             levelInstanceGo = levelInstance.gameObject;
 
+            var bounds = levelInstanceGo.GetComponentInChildren<CameraBounds>(true);
+            if (bounds == null) Debug.LogError($"Level '{levelInstance.name}' has no CameraBounds in its children.");
+            cam.SetBounds(bounds);
+
             // Wipe every persisting level object back to its authored state (platforms,
             // gates, plates, pickups, exit) — the reset that Destroy/Instantiate used to give
             // for free.
@@ -192,6 +196,7 @@ namespace NineLives
         void Update()
         {
             input.Sample();
+            if (cam != null) cam.SetLookInput(input.LookUpHeld, input.LookDownHeld);
 
             if (state == State.MainMenu) return;
 
