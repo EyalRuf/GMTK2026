@@ -10,7 +10,7 @@ namespace NineLives
     [RequireComponent(typeof(Rigidbody), typeof(HingeJoint))]
     public class HangingPhysicsObject : MonoBehaviour
     {
-        public enum StartBehavior { AtRest, InitialPush, ConstantSwing }
+        public enum StartBehavior { AtRest, Kickstart }
 
         [Header("Rope / Chain")]
         [Tooltip("The fixed point this object hangs from. If left empty, ropeLength is used instead to place the anchor straight above this object's own pivot.")]
@@ -32,9 +32,7 @@ namespace NineLives
 
         [Header("Start Behavior")]
         public StartBehavior startBehavior = StartBehavior.AtRest;
-        [Tooltip("Degrees from straight-down applied at spawn for InitialPush.")]
-        public float initialSwingAngleDeg = 30f;
-        [Tooltip("Torque impulse applied at spawn for ConstantSwing (and repeated by the keep-alive below).")]
+        [Tooltip("Torque impulse applied at spawn for Kickstart (and repeated by the keep-alive below). Object stays at its authored hanging pose — only its velocity changes.")]
         public float initialSwingForce = 5f;
 
         [Header("Keep Alive")]
@@ -57,13 +55,26 @@ namespace NineLives
             rb.useGravity = true;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezePositionZ;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
+            // Preprocessing can rigidly lock a HingeJoint into whatever anchor it had the instant
+            // it was enabled (see below) and never let it relax out of that state. Turning it off
+            // fixes that, but softens the constraint — the anchor point can drift/stretch under
+            // strong gravity unless the solver gets extra iterations to compensate.
+            rb.solverIterations = Mathf.Max(rb.solverIterations, 30);
+            rb.solverVelocityIterations = Mathf.Max(rb.solverVelocityIterations, 30);
 
             joint = GetComponent<HingeJoint>();
             joint.connectedBody = null;
             joint.axis = Vector3.forward;
+            joint.enablePreprocessing = false;
             joint.anchor = hangAnchor != null
                 ? transform.InverseTransformPoint(hangAnchor.position)
                 : new Vector3(0f, ropeLength, 0f);
+            // Auto-configure computes the world anchor from whatever anchor/axis the joint has
+            // the moment it's enabled — which happens before this Awake overrides those fields,
+            // so it locks onto Unity's defaults instead of ours. Set it explicitly instead: with
+            // connectedBody null, connectedAnchor is a plain world-space point.
+            joint.autoConfigureConnectedAnchor = false;
+            joint.connectedAnchor = hangAnchor != null ? hangAnchor.position : transform.TransformPoint(joint.anchor);
             joint.useLimits = useSwingLimit;
             if (useSwingLimit)
             {
@@ -75,15 +86,8 @@ namespace NineLives
 
             keepAliveTimer = keepAliveInterval;
 
-            switch (startBehavior)
-            {
-                case StartBehavior.InitialPush:
-                    transform.RotateAround(hangAnchor != null ? hangAnchor.position : transform.TransformPoint(joint.anchor), Vector3.forward, initialSwingAngleDeg);
-                    break;
-                case StartBehavior.ConstantSwing:
-                    rb.AddTorque(Vector3.forward * initialSwingForce, ForceMode.Impulse);
-                    break;
-            }
+            if (startBehavior == StartBehavior.Kickstart)
+                rb.AddTorque(Vector3.forward * initialSwingForce, ForceMode.Impulse);
         }
 
         void FixedUpdate()

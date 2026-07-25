@@ -48,11 +48,9 @@ namespace NineLives
         /// the same respawn flow used by falling off the map.
         public event Action<DeathInfo> DeathSequenceReady;
         static AudioClip sDefaultHitClip;
-        static readonly int pBaseColor = Shader.PropertyToID("_BaseColor");
 
-        Renderer[] flashRenderers;
+        SpriteRenderer[] flashRenderers;
         Color[] flashBaseColors;
-        MaterialPropertyBlock flashBlock;
         Coroutine flashRoutine;
 
         public void Configure(GameConfig config)
@@ -69,11 +67,10 @@ namespace NineLives
 
             mesh = transform.Find("Cat");
 
-            flashRenderers = mesh.GetComponentsInChildren<Renderer>(true);
+            flashRenderers = mesh.GetComponentsInChildren<SpriteRenderer>(true);
             flashBaseColors = new Color[flashRenderers.Length];
             for (int i = 0; i < flashRenderers.Length; i++)
-                //flashBaseColors[i] = flashRenderers[i].sharedMaterial.GetColor(pBaseColor);
-            flashBlock = new MaterialPropertyBlock();
+                flashBaseColors[i] = flashRenderers[i].color;
         }
 
         public void Spawn(Vector3 feet)
@@ -118,10 +115,7 @@ namespace NineLives
                 t += Time.deltaTime;
                 float k = 1f - Mathf.Clamp01(t / cfg.hitFlashDuration);
                 for (int i = 0; i < flashRenderers.Length; i++)
-                {
-                    flashBlock.SetColor(pBaseColor, Color.Lerp(flashBaseColors[i], cfg.hitFlashColor, k));
-                    flashRenderers[i].SetPropertyBlock(flashBlock);
-                }
+                    flashRenderers[i].color = Color.Lerp(flashBaseColors[i], cfg.hitFlashColor, k);
                 yield return null;
             }
             ResetHitFlash();
@@ -131,9 +125,8 @@ namespace NineLives
         void ResetHitFlash()
         {
             if (flashRenderers == null) return;
-            flashBlock.Clear();
             for (int i = 0; i < flashRenderers.Length; i++)
-                flashRenderers[i].SetPropertyBlock(flashBlock);
+                flashRenderers[i].color = flashBaseColors[i];
         }
 
         void PlayHitFeedback(DeathInfo info)
@@ -252,6 +245,14 @@ namespace NineLives
             if (body == null || body.isKinematic) return;
             var hanging = body.GetComponent<HangingPhysicsObject>();
             if (hanging == null) return;
+
+            // The motor clamps Velocity.y to -2 every frame while grounded (keeps the
+            // CharacterController stuck to whatever it's standing on) — that fires this callback
+            // continuously while just standing still, not only on an actual landing. Only let a
+            // downward hit through on the frame a real landing happens; sideways/upward hits
+            // (walking into it, bumping it) always go through.
+            bool mostlyDown = hit.moveDirection.y < -0.5f;
+            if (mostlyDown && !LandedThisStep && !HardLandedThisStep) return;
 
             Vector3 velocity = new Vector3(motor.Velocity.x, motor.Velocity.y, 0f);
             hanging.ApplyImpact(hit.point, hit.moveDirection.normalized * velocity.magnitude * pushMass);

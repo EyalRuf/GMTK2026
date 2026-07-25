@@ -27,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -4, y: -6, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 3.8100004, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6375722472110923999}
@@ -58,7 +58,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6050163577218297930}
   m_Layer: 0
-  m_Name: HangingPhysicsObject
+  m_Name: HangingPhysicsPlatform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -233,10 +233,10 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7108566386246531086}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -2, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
-  m_ConstrainProportionsScale: 0
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4, y: -9.81, z: 0}
+  m_LocalScale: {x: 1.616, y: 1.616, z: 1.616}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6050163577218297930}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -326,8 +326,8 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7108566386246531086}
   serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
+  m_Mass: 20
+  m_LinearDamping: 1
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -397,14 +397,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.HangingPhysicsObject
   hangAnchor: {fileID: 7062362097298712770}
-  ropeLength: 1.5
-  mass: 3
+  ropeLength: 1
+  mass: 20
   gravityScale: 1
   swingDamping: 0.3
-  useSwingLimit: 0
-  maxSwingAngleDeg: 60
+  useSwingLimit: 1
+  maxSwingAngleDeg: 40
   startBehavior: 1
-  initialSwingAngleDeg: 30
   initialSwingForce: 5
   keepSwinging: 1
   keepAliveInterval: 4
