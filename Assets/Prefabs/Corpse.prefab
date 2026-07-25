@@ -368,6 +368,22 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0.21088277
       objectReference: {fileID: 0}
+    - target: {fileID: 1256883075159166825, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
+      propertyPath: jumpKick
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1256883075159166825, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
+      propertyPath: landKick
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1256883075159166825, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
+      propertyPath: maxSquash
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1256883075159166825, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
+      propertyPath: jiggleKick
+      value: -5
+      objectReference: {fileID: 0}
     - target: {fileID: 1416099463859568304, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: m_SortingLayer
       value: 7
