@@ -140,6 +140,16 @@ Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_
   point (`NineLives/LavaSplash` additive sprite shader / `Mat_LavaSplash`) and disables itself when
   nothing is hit. Angle a fall by rotating the root; set `updateInterval` >0 or leave 0 for
   per-frame recast (moving floors). Not yet placed in any level or playtested in Play mode.
+- **In-world hints** — `PlayerMessage.cs` on the Player prefab's `LevelMsg` child (world-space
+  Canvas + TMP + CanvasGroup, local offset `(0, 1.15, -1.5)`, scale 0.005 so 400×100px = 2×0.5
+  world units; negative Z keeps it in front of level geometry). Shows a line above the cat's head,
+  pulsing alpha between `minAlpha`/`maxAlpha` at `flashesPerSecond` under a fade-in/out envelope,
+  for `duration` seconds, plus a small bob. Hidden on `GameEvents.LevelEntered`.
+  Levels supply the text via `MessageTrigger.cs` (`Assets/Prefabs/MessageTrigger.prefab` — box
+  trigger, drag into a level and scale it over the teaching spot): `message` (TextArea),
+  `duration`, `flashesPerSecond` (0 on either = the player's default), `once`. Implements
+  `ILevelResettable` so `once` re-arms on level restart. Draws a yellow gizmo box in the Editor.
+  Not placed in any level yet, not playtested.
 - **HUD** — `HUD.cs`: level label, big timer + bar, lives pips, hint, banners.
 - **Audio** — `ProceduralAudio.cs`: all SFX generated in code (jump/bounce/death/plate/win/etc).
   Background music now works: `GameManager.musicSource` (public `AudioSource` field, assigned +
@@ -321,6 +331,7 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
 | `Assets/Scripts/DeathTrap.cs` / `DeathInfo.cs` | Generic instant-kill hazard component; drop-on knockback/hit-reaction config. |
 | `Assets/Scripts/HangingPhysicsObject.cs` / `RopeVisual.cs` / `LooseProp.cs` | Hinge pendulum (cage, wrecking ball), its chain visual, and props rattling inside it. Pivot = `hangAnchor`. |
+| `Assets/Scripts/PlayerMessage.cs` / `MessageTrigger.cs` | Flashing hint above the cat's head; level-placed trigger volumes supply the text. |
 | `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |
