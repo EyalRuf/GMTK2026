@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 351969778977526097}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.564, y: -1.4068003, z: 0}
-  m_LocalScale: {x: 1, y: 7.7027903, z: 1}
+  m_LocalPosition: {x: -4.564, y: -1.4067993, z: 0}
+  m_LocalScale: {x: 1, y: 7.702791, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6375722472110923999}
@@ -165,8 +165,8 @@ Transform:
   m_GameObject: {fileID: 1755788844962133618}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.01, y: 0.01, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
+  m_LocalPosition: {x: 0.0029997001, y: -0.34000024, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6634387717055438082}
@@ -257,9 +257,9 @@ Transform:
   m_GameObject: {fileID: 1821759886994810623}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.296, y: -0.15, z: 0}
-  m_LocalScale: {x: 0.21187499, y: 0.21187499, z: 0.21187499}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0.2889997, y: -0.50000024, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6634387717055438082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -548,8 +548,8 @@ Transform:
   m_GameObject: {fileID: 2429288751369608674}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.436, y: -1.4068003, z: 0}
-  m_LocalScale: {x: 1, y: 7.7027903, z: 1}
+  m_LocalPosition: {x: -3.4359999, y: -1.4067993, z: 0}
+  m_LocalScale: {x: 1, y: 7.702791, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4009094719402088681}
@@ -596,8 +596,8 @@ Transform:
   m_GameObject: {fileID: 2550736914667101367}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.01, y: 0.01, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
+  m_LocalPosition: {x: 0.003, y: -0.34, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6634387717055438082}
@@ -968,8 +968,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.34900987, y: 0.4334221, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6634387717055438082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1000,9 +1000,9 @@ Transform:
   m_GameObject: {fileID: 4979200250859484157}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.019481428, w: 0.9998102}
-  m_LocalPosition: {x: -0.123, y: -0.286, z: 0}
-  m_LocalScale: {x: 0.26977184, y: 0.26977184, z: 0.26977184}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: -0.13000031, y: -0.6360003, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6634387717055438082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -2.233}
@@ -1294,8 +1294,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.34900987, y: 0.4334221, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6634387717055438082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1460,8 +1460,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1.1020298, z: 1}
-  m_Center: {x: 0, y: 0.05101497, z: 0}
+  m_Size: {x: 1.831142, y: 1.6072005, z: 1}
+  m_Center: {x: 0.0006090296, y: -0.33007738, z: 0}
 --- !u!23 &6019832697958687893
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1548,7 +1548,7 @@ HingeJoint:
   serializedVersion: 3
   m_ConnectedBody: {fileID: 0}
   m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0.5, z: 0}
+  m_Anchor: {x: 0, y: 5.2, z: 0}
   m_Axis: {x: 1, y: 0, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0, y: 0, z: 0}
@@ -1595,7 +1595,7 @@ MonoBehaviour:
   gravityScale: 1
   swingDamping: 0.3
   useSwingLimit: 1
-  maxSwingAngleDeg: 40
+  maxSwingAngleDeg: 30
   startBehavior: 1
   initialSwingForce: 5
   idleSway: 0

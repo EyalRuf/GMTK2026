@@ -225,8 +225,8 @@ namespace NineLives
             switch (state)
             {
                 case State.Intro:
-                    // player can already move during intro; countdown not yet running
-                    TickPlayer(dt, allowDeath: false);
+                    // controls locked until the level banner clears; countdown not yet running
+                    TickPlayer(dt, allowDeath: false, allowInput: false);
                     if (stateTimer <= 0f) { hud.HideBanner(); state = State.Playing; }
                     break;
 
@@ -266,11 +266,19 @@ namespace NineLives
             hud.SetLives(livesLeft, config.livesPerLevel);
         }
 
-        void TickPlayer(float dt, bool allowDeath)
+        void TickPlayer(float dt, bool allowDeath, bool allowInput = true)
         {
             // A trap hit is already mid-sequence (knockback + hit reaction): control is locked and
             // no other death check applies until GameManager.OnTrapDeathReady takes over.
             if (player.IsDying)
+            {
+                player.Tick(default, dt);
+                return;
+            }
+
+            // Locked during the level-intro banner: still tick so gravity settles the cat, but
+            // ignore every button so a held key doesn't fire the instant control returns.
+            if (!allowInput)
             {
                 player.Tick(default, dt);
                 return;
