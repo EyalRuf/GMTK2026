@@ -68,7 +68,7 @@ namespace NineLives
             flashRenderers = mesh.GetComponentsInChildren<Renderer>(true);
             flashBaseColors = new Color[flashRenderers.Length];
             for (int i = 0; i < flashRenderers.Length; i++)
-                flashBaseColors[i] = flashRenderers[i].sharedMaterial.GetColor(pBaseColor);
+                //flashBaseColors[i] = flashRenderers[i].sharedMaterial.GetColor(pBaseColor);
             flashBlock = new MaterialPropertyBlock();
         }
 
