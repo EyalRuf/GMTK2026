@@ -14,6 +14,9 @@ namespace NineLives
         PlatformerMotor motor;
         Transform mesh;
 
+        [Tooltip("Cat art/sprite root to flip on the X axis when facing changes. Assign in the prefab.")]
+        [SerializeField] Transform catSprite;
+
         bool wasGrounded;
         Transform ridingSurface;
         Vector3 ridingSurfaceLastPos;
@@ -33,6 +36,9 @@ namespace NineLives
         public bool ChargedJumpThisStep { get; private set; }
         public float SpeedMultiplier = 1f;
         public float JumpMultiplier = 1f;
+
+        [Tooltip("Effective mass used to push HangingPhysicsObjects (cages, swinging traps) on contact.")]
+        [SerializeField] float pushMass = 5f;
 
         /// True from the moment an instant-kill hit lands until the death sequence hands off to
         /// GameManager (which deactivates this object for the respawn). Guards against a second
@@ -61,9 +67,7 @@ namespace NineLives
             cc.skinWidth = 0.02f;
             cc.minMoveDistance = 0f;
 
-            mesh = transform.Find("CatMesh");
-            mesh.localScale = new Vector3(cfg.playerRadius * 2f, cfg.playerHeight, cfg.playerRadius * 2f);
-            mesh.localPosition = Vector3.up * (cfg.playerHeight * 0.5f);
+            mesh = transform.Find("Cat");
 
             flashRenderers = mesh.GetComponentsInChildren<Renderer>(true);
             flashBaseColors = new Color[flashRenderers.Length];
@@ -232,12 +236,25 @@ namespace NineLives
                 cc.enabled = false; transform.position = p; cc.enabled = true;
             }
 
-            if (Mathf.Abs(motor.Velocity.x) > 0.15f)
-                mesh.localScale = new Vector3(
-                    Mathf.Sign(motor.Velocity.x) * Mathf.Abs(mesh.localScale.x),
-                    mesh.localScale.y, mesh.localScale.z);
+            if (catSprite != null && Mathf.Abs(motor.Velocity.x) > 0.15f)
+                catSprite.localScale = new Vector3(
+                    Mathf.Sign(motor.Velocity.x) * Mathf.Abs(catSprite.localScale.x),
+                    catSprite.localScale.y, catSprite.localScale.z);
 
             wasGrounded = grounded;
+        }
+
+        /// Standard CharacterController-pushes-Rigidbody hook. HangingPhysicsObject doesn't know
+        /// about the player at all — it just receives an impulse and reacts.
+        void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            var body = hit.collider.attachedRigidbody;
+            if (body == null || body.isKinematic) return;
+            var hanging = body.GetComponent<HangingPhysicsObject>();
+            if (hanging == null) return;
+
+            Vector3 velocity = new Vector3(motor.Velocity.x, motor.Velocity.y, 0f);
+            hanging.ApplyImpact(hit.point, hit.moveDirection.normalized * velocity.magnitude * pushMass);
         }
 
         void TickFootsteps(float dt)
@@ -276,7 +293,8 @@ namespace NineLives
                 if (surface == null)
                 {
                     var platform = h.collider.GetComponentInParent<MovingPlatform>();
-                    surface = platform != null ? platform.transform : corpse != null ? corpse.transform : null;
+                    var hanging = h.collider.GetComponentInParent<HangingPhysicsObject>();
+                    surface = platform != null ? platform.transform : corpse != null ? corpse.transform : hanging != null ? hanging.transform : null;
                 }
             }
             return grounded && motor.Velocity.y <= 0.5f;

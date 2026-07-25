@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags: []
   layers:
   - Default
@@ -41,6 +41,33 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: BG4
+    uniqueID: 3290483923
+    locked: 0
+  - name: BG3
+    uniqueID: 627467179
+    locked: 0
+  - name: BG2
+    uniqueID: 3048879163
+    locked: 0
+  - name: BG1
+    uniqueID: 2613592655
+    locked: 0
+  - name: PlayStack
+    uniqueID: 4116101329
+    locked: 0
+  - name: Player
+    uniqueID: 2943801213
+    locked: 0
+  - name: FG3
+    uniqueID: 1025988847
+    locked: 0
+  - name: FG2
+    uniqueID: 826731693
+    locked: 0
+  - name: FG1
+    uniqueID: 1460086321
+    locked: 0
   m_RenderingLayers:
   - Default
   - Light Layer 1
@@ -50,27 +77,4 @@ TagManager:
   - Light Layer 5
   - Light Layer 6
   - Light Layer 7
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  m_MigratedRenderPipelines: []
