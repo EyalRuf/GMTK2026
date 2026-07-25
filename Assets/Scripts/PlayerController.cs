@@ -61,7 +61,7 @@ namespace NineLives
             cc = GetComponent<CharacterController>();
             cc.height = cfg.playerHeight;
             cc.radius = cfg.playerRadius;
-            cc.center = Vector3.up * (cfg.playerHeight * 0.5f);
+            cc.center = Vector3.up * (cfg.playerHeight * 0.2f);
             cc.skinWidth = 0.02f;
             cc.minMoveDistance = 0f;
 
