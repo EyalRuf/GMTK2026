@@ -15,18 +15,47 @@ namespace NineLives
         float shakeDuration;
         float shakeMagnitude;
 
+        float lookHoldTimer;
+        float lookOffsetY;
+        float lookOffsetVel;
+        bool lookUpHeld;
+        bool lookDownHeld;
+
         public void Configure(GameConfig config, PlayerController p)
         {
             cfg = config; player = p; target = p.transform;
-            bounds = FindFirstObjectByType<CameraBounds>();
             cam = GetComponent<Camera>();
+        }
+
+        /// Levels are pre-placed and toggled active/inactive rather than loaded, so the bounds
+        /// to clamp against must be re-pointed explicitly whenever GameManager starts a level -
+        /// a scene-wide FindFirstObjectByType would just grab whichever level's bounds happens
+        /// to be first in the hierarchy.
+        public void SetBounds(CameraBounds b) => bounds = b;
+
+        /// Fed once per frame from GameManager's sampled input. Holding up/down for
+        /// cameraLookHoldDelay seconds pans the camera that direction; releasing eases it back.
+        public void SetLookInput(bool up, bool down)
+        {
+            lookUpHeld = up;
+            lookDownHeld = down;
         }
 
         void LateUpdate()
         {
             if (target == null) return;
+
+            bool wantsLook = lookUpHeld != lookDownHeld;
+            if (wantsLook) lookHoldTimer += Time.deltaTime;
+            else lookHoldTimer = 0f;
+
+            float lookTarget = 0f;
+            if (lookHoldTimer >= cfg.cameraLookHoldDelay)
+                lookTarget = (lookUpHeld ? 1f : -1f) * cfg.cameraLookDistance;
+            lookOffsetY = Mathf.SmoothDamp(lookOffsetY, lookTarget, ref lookOffsetVel, cfg.cameraLookSmoothing);
+
             float look = player != null ? player.Velocity.x * cfg.cameraLookAhead : 0f;
-            Vector3 goal = target.position + cfg.cameraOffset + Vector3.right * look;
+            Vector3 goal = target.position + cfg.cameraOffset + Vector3.right * look + Vector3.up * lookOffsetY;
             goal = Clamp(goal);
             transform.position = Vector3.SmoothDamp(transform.position, goal, ref vel, cfg.cameraSmoothing);
 
