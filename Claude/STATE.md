@@ -67,6 +67,38 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   ordering is by world Z under the perspective camera (transparent sprites sort by camera distance,
   and level geometry occludes backgrounds via the depth buffer). Layers share
   `Assets/Sprites/Parallax/Parallax_Placeholder.png` (swap each layer's sprite for real art later).
+- **Death traps** — `DeathTrap.cs`: drop on any hazard (spikes/lava/saw/poison) to make it an
+  instant kill. Per-instance Inspector fields: knockback away-from-trap or fixed direction,
+  force, vertical lift, control-lock duration, optional hit SFX/VFX overrides. On player contact
+  (trigger or collision) it builds a `DeathInfo` and calls `PlayerController.Die(info)` — the
+  reusable instant-kill entry point any future hazard reuses.
+  - **Flow**: `PlayerController.Die()` sets `IsDying`, applies the knockback velocity straight to
+    the motor (existing gravity/deceleration carries the arc — no separate knockback physics
+    needed), raises `GameEvents.TrapHit` (drives the new `HitReaction` animator state + default
+    procedural hit SFX, or the trap's override clip/prefab if set), then after
+    `controlLockDuration` raises `DeathSequenceReady`. `GameManager` subscribes to that and calls
+    `DieAutomatic()` — **identical result to falling off the map** (unrecoverable, corpse spawns in
+    place, respawn at entry/death-spot per existing rules) except the player dies in place instead
+    of falling. `GameManager.TickPlayer` feeds zeroed input and skips fall/sacrifice checks while
+    `player.IsDying`.
+  - **No checkpoints** — respawn location is unchanged (level entry, or death-spot if
+    `respawnAtDeathSpot`); user explicitly deferred checkpoints as out of jam scope.
+  - **Not yet placed on any hazard** — the component exists and compiles clean; drag it onto
+    spikes/lava/saw geometry (with a trigger or solid collider) to activate. Not playtested in
+    Play mode yet.
+  - Animator: new `Hit` trigger + `HitReaction` state (placeholder empty clip, same pattern as the
+    other 14 states) on `AnyState`; interrupts into `DeathRespawn` on `Die`, or exit-times back to
+    `Idle1` if `Die` never comes.
+- **Lava waterfall** — `LavaWaterfall.cs` (`ExecuteAlways`) + `Assets/Prefabs/LavaWaterfall.prefab`.
+  Drag the prefab into a level; the root raycasts down (`hitMask`/`castRadius`/`maxLength`) and
+  stretches the `Stream` quad to the hit distance, feeding the world length into the shader via a
+  `MaterialPropertyBlock` (`_Length`) so flow density stays constant at any height. `NineLives/
+  LavaWaterfall` shader (`Mat_LavaWaterfall`) is procedural (no textures): downward fbm flow,
+  distortion, HDR emission, soft side/top/bottom alpha fades (wobbly dissolving bottom, no clip),
+  edge glow — all Inspector-tunable. The `Splash` child particle system snaps to the exact impact
+  point (`NineLives/LavaSplash` additive sprite shader / `Mat_LavaSplash`) and disables itself when
+  nothing is hit. Angle a fall by rotating the root; set `updateInterval` >0 or leave 0 for
+  per-frame recast (moving floors). Not yet placed in any level or playtested in Play mode.
 - **HUD** — `HUD.cs`: level label, big timer + bar, lives pips, hint, banners.
 - **Audio** — `ProceduralAudio.cs`: all SFX generated in code (jump/bounce/death/plate/win/etc).
   Background music now works: `GameManager.musicSource` (public `AudioSource` field, assigned +
@@ -232,6 +264,7 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/ILevelResettable.cs` | `ResetToInitial()` contract for level content; GameManager walks it on level (re)entry. |
 | `Assets/Scripts/LevelRoot.cs` | Marks a level's root; entry/exit/timer/name/hint. |
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
+| `Assets/Scripts/DeathTrap.cs` / `DeathInfo.cs` | Generic instant-kill hazard component; drop-on knockback/hit-reaction config. |
 | `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |

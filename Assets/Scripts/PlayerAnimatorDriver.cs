@@ -11,9 +11,11 @@ namespace NineLives
     /// transitions fire (watch it in the Animator window), but nothing moves the mesh yet, so it
     /// doesn't fight PlayerController's own scale/facing. When real clips are authored, wire their
     /// animation events to the AnimEvent_* methods here to drive VFX/SFX off the animation itself.
-    [RequireComponent(typeof(Animator))]
     public class PlayerAnimatorDriver : MonoBehaviour
     {
+        [Tooltip("Animator on the cat art child. Assign in the prefab; falls back to any Animator in children.")]
+        [SerializeField] Animator anim;
+
         [Tooltip("Seconds standing still before the secondary idle (lick/stretch) plays.")]
         [SerializeField] float idle2Delay = 4f;
 
@@ -27,20 +29,20 @@ namespace NineLives
         static readonly int tHardLand = Animator.StringToHash("HardLand");
         static readonly int tIdle2 = Animator.StringToHash("Idle2");
         static readonly int tDie = Animator.StringToHash("Die");
+        static readonly int tHit = Animator.StringToHash("Hit");
         static readonly int tCorpse = Animator.StringToHash("Corpse");
         static readonly int tLevelEnter = Animator.StringToHash("LevelEnter");
         static readonly int tLevelExit = Animator.StringToHash("LevelExit");
         static readonly int tThrow = Animator.StringToHash("Throw");
         static readonly int tChargeThrow = Animator.StringToHash("ChargeThrow");
 
-        Animator anim;
         PlayerController player;
         float idleTimer;
         bool idle2Fired;
 
         void Awake()
         {
-            anim = GetComponent<Animator>();
+            if (anim == null) anim = GetComponentInChildren<Animator>();
             player = GetComponent<PlayerController>();
         }
 
@@ -51,6 +53,7 @@ namespace NineLives
             GameEvents.HardLanded += OnHardLanded;
             GameEvents.SacrificeDeath += OnDeath;
             GameEvents.PoofDeath += OnDeath;
+            GameEvents.TrapHit += OnTrapHit;
             GameEvents.CorpseSpawned += OnCorpseSpawned;
             GameEvents.LevelEntered += OnLevelEntered;
             GameEvents.LevelExited += OnLevelExited;
@@ -65,6 +68,7 @@ namespace NineLives
             GameEvents.HardLanded -= OnHardLanded;
             GameEvents.SacrificeDeath -= OnDeath;
             GameEvents.PoofDeath -= OnDeath;
+            GameEvents.TrapHit -= OnTrapHit;
             GameEvents.CorpseSpawned -= OnCorpseSpawned;
             GameEvents.LevelEntered -= OnLevelEntered;
             GameEvents.LevelExited -= OnLevelExited;
@@ -105,6 +109,7 @@ namespace NineLives
         void OnLanded(Vector3 _) => anim.SetTrigger(tLand);
         void OnHardLanded(Vector3 _) => anim.SetTrigger(tHardLand);
         void OnDeath(Vector3 _) => anim.SetTrigger(tDie);
+        void OnTrapHit(Vector3 _) => anim.SetTrigger(tHit);
         void OnCorpseSpawned(Vector3 _) => anim.SetTrigger(tCorpse);
         void OnLevelEntered(Vector3 _) => anim.SetTrigger(tLevelEnter);
         void OnLevelExited(Vector3 _) => anim.SetTrigger(tLevelExit);

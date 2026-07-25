@@ -25,6 +25,7 @@ namespace NineLives
         public static AudioClip LevelEntry()   => Arp("sfx_entry", new[] { 523f, 784f, 1046f }, 0.36f, 0.34f);
         public static AudioClip LevelExit()    => Arp("sfx_exit", new[] { 659f, 988f, 1319f }, 0.3f, 0.3f);
         public static AudioClip Throw()        => Tone("sfx_throw", 420f, 720f, 0.14f, 0.35f);
+        public static AudioClip Hit()          => Tone("sfx_hit", 900f, 220f, 0.09f, 0.45f);
 
         static AudioClip Tone(string name, float f0, float f1, float dur, float vol)
         {
