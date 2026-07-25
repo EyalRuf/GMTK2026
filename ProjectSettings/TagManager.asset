@@ -71,6 +71,9 @@ TagManager:
   - name: FG1
     uniqueID: 1460086321
     locked: 0
+  - name: UI
+    uniqueID: 1306801193
+    locked: 0
   m_RenderingLayers:
   - Default
   - Light Layer 1
