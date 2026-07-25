@@ -1,6 +1,6 @@
 # STATE.md — current state of the game
 
-**Last updated:** 2026-07-23
+**Last updated:** 2026-07-25
 
 ## Core loop
 
@@ -8,7 +8,7 @@ Side-scrolling puzzle platformer. Play a cat with 9 lives; get from entry (A) to
 exit (B). Each life has a death countdown; at 0 (or press Q to sacrifice) the cat dies and
 leaves a **corpse** — a physics box. Corpses hold pressure plates and act as platforms.
 Respawn is at the entry; corpses persist. Run out of 9 lives → the level resets (corpses cleared).
-8 levels play back-to-back (`Level_1` … `Level_8_Springboard`).
+Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_5`.
 
 ## What works right now
 
@@ -96,6 +96,40 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   - Animator: new `Hit` trigger + `HitReaction` state (placeholder empty clip, same pattern as the
     other 14 states) on `AnyState`; interrupts into `DeathRespawn` on `Die`, or exit-times back to
     `Idle1` if `Die` never comes.
+- **Hanging physics** — `HangingPhysicsObject.cs` + `RopeVisual.cs`. A Rigidbody + HingeJoint
+  pendulum in the XY plane. Prefabs: `HangingPhysicsTrap.prefab` (single-chain wrecking ball, in
+  Level_4) and `HangingPhysicsPlatform.prefab` (two-chain cage, in Level_5).
+  - **`hangAnchor` is the only source of truth for the pivot.** `Awake()` overwrites the
+    `HingeJoint`'s `anchor`/`connectedAnchor` from it, and `ropeLength` is read *only* when
+    `hangAnchor` is null. Authoring either one in the Inspector used to be silently discarded —
+    the Scene view drew one pivot while the game swung around another. Both cases now log a
+    warning naming what won. **To change the rope length, move the anchor transform.**
+  - **Idle sway** (`idleSway` / `idleSwayAngle` / `idleSwayResponse`) — keeps an object gently
+    swinging forever instead of settling into a dead pose. Measures the amplitude of each
+    half-swing and, while it's under target, pumps torque along the current direction of travel,
+    so the drive matches the pendulum's own rhythm rather than shoving it on a timer. Torque is
+    auto-scaled by inertia-about-the-hinge × natural frequency, so the Inspector number means the
+    same thing on any object. Knocked wider than the target, the drive shuts off and `swingDamping`
+    brings it back down. On for the Level_4 trap (10°), off for the cage.
+  - **Rope art must live between the pivot and the object.** `RopeVisual` sits at the anchor,
+    rotates toward the target and scales Y to the distance — so anything above the pivot swings
+    *backwards*, and hand-tiled chain segments stretch instead of adding links. One `RopeVisual`
+    per chain: the cage has `Rope_L`/`Rope_R`, each with its own `HangAnchor_L/R` and a
+    `ChainAttach_L/R` on the cage, 4 links tiling the span exactly. Anything offset sideways from
+    its rope's own pivot will sweep an arc at the top.
+  - Player contact goes through `PlayerController.OnControllerColliderHit` → `ApplyImpact`; the
+    cage is stood on via the existing `surface` platform-riding path. `ApplyImpact` also raises
+    `Impacted(impulseMagnitude)` — the hook cosmetic listeners use instead of sniffing physics.
+  - **`LooseProp.cs`** — props rattling inside a hanging object (the `Bone` and `Skull` in the
+    Level_5 cage, where it's already attached). No physics, no collider: it subscribes to
+    `Impacted`, kicks a spring-damper on local position + Z rotation sized so the first swing peaks
+    at `shakeDistance`, then settles back to the pose it read at `Awake` and stops updating. Rest
+    pose is read live, so per-level position overrides are respected. Strength scales with impulse
+    against `fullJoltImpulse`. Fires on contact only, not while the cage swings freely. Tuned per
+    prop so they don't move in lockstep (bone looser/faster than skull).
+  - **Not playtested in Play mode.** Level_5's cage now hangs on an 8.40 rope (was 3.81), so its
+    swing period is ~5.8s and it travels ±4.2 units at `maxSwingAngleDeg` 30 — drop that to ~13.6
+    if it sweeps too far.
 - **Lava waterfall** — `LavaWaterfall.cs` (`ExecuteAlways`) + `Assets/Prefabs/LavaWaterfall.prefab`.
   Drag the prefab into a level; the root raycasts down (`hitMask`/`castRadius`/`maxLength`) and
   stretches the `Stream` quad to the hit distance, feeding the world length into the shader via a
@@ -253,6 +287,20 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 - **Never delete `.cs`/`.meta` files directly on disk (`rm`) while the Editor is open** — it
   crashed the Editor process outright once, mid-reimport. Prefer `AssetDatabase.DeleteAsset`
   via `eval_file`, or accept the Editor needs a manual reopen after.
+- **Levels are nested prefabs — edit `Assets/Levels/Level_N.prefab`, not the scene objects.**
+  `Game.unity` holds each level as a *prefab instance*, so per-level overrides (moved children,
+  added GameObjects, tweaked component values) are stored inside the level prefab. Writing to the
+  matching objects in the open scene appears to succeed and then silently loses to those stored
+  overrides — the values read back unchanged. Cost two full rounds of "the fix didn't take" on the
+  Level_5 cage. `PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(go)` tells you which asset
+  actually owns an object.
+- Across that nesting, `PrefabUtility.IsAddedGameObjectOverride` returns false and
+  `RevertObjectOverride` silently does nothing. What works: `GetCorrespondingObjectFromSource(go)
+  == null` to detect instance-added objects, and assigning the source object's values directly
+  instead of trusting the revert API.
+- `[ExecuteAlways]` components that write transforms (`RopeVisual`, `LavaWaterfall`) bake instance
+  overrides into whatever prefab owns the object just by the Editor ticking. Expect stale
+  overrides to reappear; don't assume an authored value is the one in play.
 - Building prefabs via `eval_file` + `SerializedObject`/`PrefabUtility.SaveAsPrefabAsset` is much
   faster than one MCP tool call per GameObject/component — write one script per prefab, wire
   `[SerializeField]` fields by name with `SerializedObject.FindProperty(...).objectReferenceValue`,
@@ -272,6 +320,7 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/LevelRoot.cs` | Marks a level's root; entry/exit/timer/name/hint. |
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
 | `Assets/Scripts/DeathTrap.cs` / `DeathInfo.cs` | Generic instant-kill hazard component; drop-on knockback/hit-reaction config. |
+| `Assets/Scripts/HangingPhysicsObject.cs` / `RopeVisual.cs` / `LooseProp.cs` | Hinge pendulum (cage, wrecking ball), its chain visual, and props rattling inside it. Pivot = `hangAnchor`. |
 | `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |

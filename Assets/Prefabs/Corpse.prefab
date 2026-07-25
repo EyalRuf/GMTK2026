@@ -66,8 +66,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.7966251, y: 0.5418294, z: 1}
-  m_Center: {x: 0.43502393, y: 0.19463858, z: 0}
+  m_Size: {x: 0.7966251, y: 0.38815415, z: 1}
+  m_Center: {x: 0.43502393, y: 0.11780095, z: 0}
 --- !u!23 &1549542004031891553
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -302,8 +302,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.58714294, y: 0.20601985, z: 1}
-  m_Center: {x: 0.02296251, y: -0.20582788, z: 0}
+  m_Size: {x: 0.58714294, y: 0.16673711, z: 1}
+  m_Center: {x: 0.02296251, y: -0.1861865, z: 0}
 --- !u!1001 &1832045760639380646
 PrefabInstance:
   m_ObjectHideFlags: 0

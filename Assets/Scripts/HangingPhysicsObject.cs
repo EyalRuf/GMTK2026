@@ -35,17 +35,22 @@ namespace NineLives
         [Tooltip("Torque impulse applied at spawn for Kickstart (and repeated by the keep-alive below). Object stays at its authored hanging pose — only its velocity changes.")]
         public float initialSwingForce = 5f;
 
-        [Header("Keep Alive")]
-        [Tooltip("Periodically nudge the object so it never fully settles, e.g. an idle swinging spike trap.")]
-        public bool keepSwinging = false;
-        public float keepAliveInterval = 4f;
-        public float keepAliveForce = 3f;
-        [Tooltip("Only nudge if angular speed has dropped below this (rad/s).")]
-        public float keepAliveVelocityThreshold = 0.15f;
+        [Header("Idle Sway")]
+        [Tooltip("Continuously pumps the swing so the object never settles into a dead-still pose. Also brings it back down to the idle sway after the player knocks it around.")]
+        public bool idleSway = false;
+        [Tooltip("Swing amplitude to hold, in degrees from straight-down.")]
+        public float idleSwayAngle = 8f;
+        [Tooltip("How hard to pump. 1 is a sane default; higher reaches the idle angle faster (and recovers faster after a hit). Auto-scaled by mass and rope length, so it means the same thing on any hanging object.")]
+        public float idleSwayResponse = 1f;
 
         Rigidbody rb;
         HingeJoint joint;
-        float keepAliveTimer;
+        float restAngleZ;
+        float pivotInertia = 1f;
+        float naturalFrequency = 1f;
+        float swingAmplitude;
+        float halfSwingPeak;
+        float lastAngularVel;
 
         void Awake()
         {
@@ -66,9 +71,19 @@ namespace NineLives
             joint.connectedBody = null;
             joint.axis = Vector3.forward;
             joint.enablePreprocessing = false;
+            // Whatever was typed into the HingeJoint in the Inspector is about to be replaced. That
+            // silence is a trap: the Scene view keeps drawing the authored pivot while the game
+            // swings around a different one. Say so instead of letting it go unnoticed.
+            var authoredAnchor = joint.anchor;
             joint.anchor = hangAnchor != null
                 ? transform.InverseTransformPoint(hangAnchor.position)
                 : new Vector3(0f, ropeLength, 0f);
+            if (authoredAnchor.sqrMagnitude > 0.0001f && Vector3.Distance(authoredAnchor, joint.anchor) > 0.05f)
+                Debug.LogWarning($"{name}: HingeJoint anchor {authoredAnchor} set in the Inspector is ignored — this component drives the pivot from " +
+                                 (hangAnchor != null ? $"hangAnchor '{hangAnchor.name}'" : $"ropeLength {ropeLength}") +
+                                 $", which resolves to {joint.anchor}. Move that instead.", this);
+            if (hangAnchor != null && !Mathf.Approximately(ropeLength, 1.5f))
+                Debug.LogWarning($"{name}: ropeLength {ropeLength} does nothing while hangAnchor '{hangAnchor.name}' is assigned — the anchor transform wins. Move the anchor to change the rope length.", this);
             // Auto-configure computes the world anchor from whatever anchor/axis the joint has
             // the moment it's enabled — which happens before this Awake overrides those fields,
             // so it locks onto Unity's defaults instead of ours. Set it explicitly instead: with
@@ -84,7 +99,15 @@ namespace NineLives
                 joint.limits = limits;
             }
 
-            keepAliveTimer = keepAliveInterval;
+            restAngleZ = transform.eulerAngles.z;
+            // A torque that reads the same on a light lantern and a 20kg wrecking ball has to be
+            // scaled by what the object actually is: its inertia about the hinge (not its own
+            // centre) and the frequency the pendulum wants to swing at.
+            float ropeSpan = Vector3.Distance(rb.worldCenterOfMass, joint.connectedAnchor);
+            pivotInertia = Mathf.Max(rb.inertiaTensor.z, 0.01f) + mass * ropeSpan * ropeSpan;
+            float g = Mathf.Abs(Physics.gravity.y) * gravityScale;
+            naturalFrequency = ropeSpan > 0.001f ? Mathf.Sqrt(mass * g * ropeSpan / pivotInertia) : 1f;
+            if (idleSway) rb.sleepThreshold = 0f;
 
             if (startBehavior == StartBehavior.Kickstart)
                 rb.AddTorque(Vector3.forward * initialSwingForce, ForceMode.Impulse);
@@ -95,15 +118,46 @@ namespace NineLives
             if (!Mathf.Approximately(gravityScale, 1f))
                 rb.AddForce(Physics.gravity * (gravityScale - 1f) * rb.mass, ForceMode.Force);
 
-            if (!keepSwinging) return;
-            keepAliveTimer -= Time.fixedDeltaTime;
-            if (keepAliveTimer > 0f) return;
-            keepAliveTimer = keepAliveInterval;
-            if (rb.angularVelocity.magnitude < keepAliveVelocityThreshold)
-                rb.AddTorque(Vector3.forward * keepAliveForce, ForceMode.Impulse);
+            if (idleSway) DriveIdleSway();
         }
 
+        /// Feeds just enough energy back in to hold a lazy idle swing forever. Pumping along the
+        /// current direction of travel (rather than on a timer) means the drive automatically
+        /// matches the pendulum's own rhythm, so it looks like momentum, not like a shove.
+        void DriveIdleSway()
+        {
+            float angle = Mathf.DeltaAngle(restAngleZ, transform.eulerAngles.z);
+            float angularVel = rb.angularVelocity.z;
+
+            // Amplitude of the swing = the peak angle reached since it last turned around; latch
+            // it in the moment it turns around again.
+            halfSwingPeak = Mathf.Max(halfSwingPeak, Mathf.Abs(angle));
+            if (angularVel * lastAngularVel < 0f)
+            {
+                swingAmplitude = halfSwingPeak;
+                halfSwingPeak = 0f;
+            }
+            lastAngularVel = angularVel;
+
+            float missingAngle = idleSwayAngle - swingAmplitude;
+            if (missingAngle <= 0f) return; // swinging wider than idle (player hit it) — let damping bleed it off
+
+            float dir = Mathf.Abs(angularVel) > 0.001f ? Mathf.Sign(angularVel)
+                      : Mathf.Abs(angle) > 0.01f ? -Mathf.Sign(angle)
+                      : 1f;
+            float torque = missingAngle * Mathf.Deg2Rad * pivotInertia * naturalFrequency * idleSwayResponse;
+            rb.AddTorque(Vector3.forward * dir * torque, ForceMode.Force);
+        }
+
+        /// Raised on every hit with the impulse magnitude. Cosmetic listeners (LooseProp on the
+        /// bones rattling inside the cage) hook this instead of sniffing the physics themselves.
+        public event System.Action<float> Impacted;
+
         /// External hit — from the player's controller, another swinging object, etc.
-        public void ApplyImpact(Vector3 worldPoint, Vector3 force) => rb.AddForceAtPosition(force, worldPoint, ForceMode.Impulse);
+        public void ApplyImpact(Vector3 worldPoint, Vector3 force)
+        {
+            rb.AddForceAtPosition(force, worldPoint, ForceMode.Impulse);
+            Impacted?.Invoke(force.magnitude);
+        }
     }
 }
