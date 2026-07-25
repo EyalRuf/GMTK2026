@@ -7,6 +7,8 @@ namespace NineLives
         GameConfig cfg;
         Transform target;
         PlayerController player;
+        CameraBounds bounds;
+        Camera cam;
         Vector3 vel;
 
         float shakeTimeLeft;
@@ -16,6 +18,8 @@ namespace NineLives
         public void Configure(GameConfig config, PlayerController p)
         {
             cfg = config; player = p; target = p.transform;
+            bounds = FindFirstObjectByType<CameraBounds>();
+            cam = GetComponent<Camera>();
         }
 
         void LateUpdate()
@@ -23,6 +27,7 @@ namespace NineLives
             if (target == null) return;
             float look = player != null ? player.Velocity.x * cfg.cameraLookAhead : 0f;
             Vector3 goal = target.position + cfg.cameraOffset + Vector3.right * look;
+            goal = Clamp(goal);
             transform.position = Vector3.SmoothDamp(transform.position, goal, ref vel, cfg.cameraSmoothing);
 
             if (shakeTimeLeft > 0f)
@@ -45,8 +50,35 @@ namespace NineLives
         {
             if (target == null) return;
             shakeTimeLeft = 0f;
-            transform.position = target.position + cfg.cameraOffset;
+            transform.position = Clamp(target.position + cfg.cameraOffset);
             vel = Vector3.zero;
+        }
+
+        Vector3 Clamp(Vector3 pos)
+        {
+            if (bounds == null) return pos;
+            Vector2 min = bounds.Min;
+            Vector2 max = bounds.Max;
+
+            float halfH = 0f, halfW = 0f;
+            if (cam != null && cam.orthographic)
+            {
+                halfH = cam.orthographicSize;
+                halfW = halfH * cam.aspect;
+            }
+
+            pos.x = ClampAxis(pos.x, min.x, max.x, halfW);
+            pos.y = ClampAxis(pos.y, min.y, max.y, halfH);
+            return pos;
+        }
+
+        static float ClampAxis(float value, float min, float max, float half)
+        {
+            min += half;
+            max -= half;
+            // if the bounds are narrower than the screen, center instead of clamping to an inverted range
+            if (min > max) return (min + max) * 0.5f;
+            return Mathf.Clamp(value, min, max);
         }
     }
 }
