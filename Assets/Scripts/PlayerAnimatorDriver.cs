@@ -79,6 +79,9 @@ namespace NineLives
         void Update()
         {
             if (anim == null || player == null) return;
+            // While dying, hold whatever death/hit state we're in: the live params still describe
+            // the last living frame (Falling, mid-run Speed) and would transition straight back out.
+            if (player.IsDying) return;
 
             float speed = Mathf.Abs(player.Velocity.x);
             bool grounded = player.Grounded;
@@ -108,7 +111,17 @@ namespace NineLives
 
         void OnLanded(Vector3 _) => anim.SetTrigger(tLand);
         void OnHardLanded(Vector3 _) => anim.SetTrigger(tHardLand);
-        void OnDeath(Vector3 _) => anim.SetTrigger(tDie);
+        /// Neutralise the params before the trigger so the death state can't be immediately
+        /// exited by a stale Falling/Speed left over from the frame the cat died on.
+        void OnDeath(Vector3 _)
+        {
+            anim.SetFloat(pSpeed, 0f);
+            anim.SetBool(pGrounded, true);
+            anim.SetBool(pCharging, false);
+            anim.SetBool(pFalling, false);
+            anim.SetTrigger(tDie);
+        }
+
         void OnTrapHit(Vector3 _) => anim.SetTrigger(tHit);
         void OnCorpseSpawned(Vector3 _) => anim.SetTrigger(tCorpse);
         void OnLevelEntered(Vector3 _) => anim.SetTrigger(tLevelEnter);

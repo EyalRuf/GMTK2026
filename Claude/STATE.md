@@ -12,8 +12,15 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
 
 ## What works right now
 
-- **Movement** — `PlatformerMotor` (plain C#): accel/decel, coyote time, jump buffer, variable
-  jump height, snappy fall gravity. Driven by `PlayerController` (CharacterController, in Update).
+- **Movement** — `PlatformerMotor` (plain C#): accel/decel, coyote time, jump buffer, snappy fall
+  gravity. Driven by `PlayerController` (CharacterController, in Update).
+  **Jump is always charge-and-release**, moving or not: press starts the charge, release fires it,
+  height lerps `baseJumpHeight`→`jumpHeight` over `jumpHoldTime`. A tap shorter than
+  `quickJumpMaxHold` is the quick jump (base height, `QuickJump` anim); longer counts as charged
+  (`JumpRelease` anim). While charging you plant your feet, but only after a `chargeGraceTime`
+  window where you still move at `chargeGraceSpeedMultiplier`, then coast down at
+  `chargePlantDeceleration`. `Charging` is true any time jump is held on the ground, so the
+  `ChargingJump` animator state plays from Idle *and* from Movement.
 - **Death countdown** — `LifeTimer`; per-level duration, resets each life, tick SFX under 3s.
 - **Corpses** — `Corpse.cs`: physics box, freezes to a solid platform after settling. **Normal
   corpses are no longer bouncy** — just a solid climbable platform (the base, power-less case).

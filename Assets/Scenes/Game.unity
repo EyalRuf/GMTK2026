@@ -1428,12 +1428,8 @@ PrefabInstance:
       value: MainCamera
       objectReference: {fileID: 0}
     - target: {fileID: 7728155854891183381, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
-      propertyPath: orthographic
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7728155854891183381, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
-      propertyPath: far clip plane
-      value: 50
+      propertyPath: orthographic size
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

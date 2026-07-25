@@ -53,6 +53,7 @@ namespace NineLives
         bool hasDiedThisLevel;
         Vector3 lastDeathFeet;
         bool lastDeathUnrecoverable;
+        float gameOverDeathLeft;
 
         // Jump/land/death SFX moved to FXManager (event-driven). Bounce/plate/win/fail/tick stay here.
         AudioClip sBounce, sPlate, sWin, sFail, sTick;
@@ -251,6 +252,7 @@ namespace NineLives
                     break;
 
                 case State.GameOver:
+                    TickGameOverDeath(dt);
                     if (stateTimer <= 0f) StartLevel(levelIndex);
                     break;
 
@@ -407,6 +409,30 @@ namespace NineLives
             audio.PlayOneShot(sFail);
             EnterState(State.GameOver, 1.6f);
             hud.Banner("OUT OF LIVES", "Resetting the level…", GreyboxFactory.Hazard);
+
+            // Reaching game over on the timer (rather than through Die()) leaves the cat alive and
+            // standing there — it'd idle under the banner. Kill it in place: death event -> death
+            // animation + FX, then hide it once the clip is done.
+            timer.Stop();
+            timerStarted = false;
+            gameOverDeathLeft = 0f;
+            if (player.gameObject.activeSelf)
+            {
+                corpseCarry.DropHeld();
+                player.EnterDeathPose();
+                GameEvents.RaiseSacrificeDeath(player.FeetPosition);
+                gameOverDeathLeft = config.gameOverDeathAnimTime;
+            }
+        }
+
+        /// Lets gravity settle the corpse-to-be while the death animation plays (IsDying means
+        /// Tick takes no input), then hides it before the animator exit-times back to Idle.
+        void TickGameOverDeath(float dt)
+        {
+            if (gameOverDeathLeft <= 0f) return;
+            gameOverDeathLeft -= dt;
+            player.Tick(default, dt);
+            if (gameOverDeathLeft <= 0f) player.gameObject.SetActive(false);
         }
 
         void EnterWin()

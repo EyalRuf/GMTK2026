@@ -87,6 +87,17 @@ namespace NineLives
             gameObject.SetActive(true);
         }
 
+        /// Death with no hazard behind it: the level's last soul burned down while the cat was
+        /// still standing there. Kills input/facing updates and freezes the animator params (see
+        /// PlayerAnimatorDriver) so the death animation can play out in place before GameManager
+        /// hides the object.
+        public void EnterDeathPose()
+        {
+            if (IsDying) return;
+            IsDying = true;
+            motor.Velocity = new Vector2(0f, motor.Velocity.y);
+        }
+
         /// Reusable instant-kill entry point: any hazard (DeathTrap today, future instant-kill
         /// mechanics later) notifies the player here instead of touching game-flow state directly.
         /// Applies knockback immediately (the existing motor's gravity/deceleration carries it

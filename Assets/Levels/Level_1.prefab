@@ -1653,6 +1653,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cage (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 5048080499186111485, guid: f68c92550d420a24e849882c8a105ffe, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

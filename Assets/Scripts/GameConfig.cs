@@ -22,6 +22,14 @@ namespace NineLives
         public float jumpHeight = 3.5f;
         [Tooltip("How long the player can charge jump (holding, before release) to gain height, in seconds.")]
         public float jumpHoldTime = 1.5f;
+        [Tooltip("Hold shorter than this fires a quick jump: base height, quick-jump animation instead of the charged one.")]
+        public float quickJumpMaxHold = 0.12f;
+        [Tooltip("Grace window at the start of a charge where you keep moving before planting your feet.")]
+        public float chargeGraceTime = 0.25f;
+        [Tooltip("Move speed multiplier during the charge grace window.")]
+        public float chargeGraceSpeedMultiplier = 0.8f;
+        [Tooltip("Deceleration used to coast to a stop once the charge grace window ends.")]
+        public float chargePlantDeceleration = 45f;
         [Tooltip("Seconds from leaving the ground to the top of the arc (at max jump height). Lower = heavier, punchier.")]
         public float timeToApex = 0.4f;
         [Tooltip("Gravity multiplier while falling. >1 makes the fall snappier than the rise.")]
@@ -88,6 +96,8 @@ namespace NineLives
         public bool isTimedCorpseSpawn = true;
         [Tooltip("UI ONLY: show the numeric countdown next to the soul icons. When off, only the draining soul icons indicate remaining time.")]
         public bool showTimerSeconds = true;
+        [Tooltip("Seconds the cat's death animation plays under the OUT OF LIVES banner before it's hidden (should match Anim_DeathRespawn's length).")]
+        public float gameOverDeathAnimTime = 0.85f;
 
         [Header("Camera")]
         public Vector3 cameraOffset = new Vector3(0f, 1.5f, -15f);
