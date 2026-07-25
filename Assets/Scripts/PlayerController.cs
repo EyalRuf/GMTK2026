@@ -13,6 +13,7 @@ namespace NineLives
         CharacterController cc;
         PlatformerMotor motor;
         Transform mesh;
+        SpringSquash squash;
 
         [Tooltip("Cat art/sprite root to flip on the X axis when facing changes. Assign in the prefab.")]
         [SerializeField] Transform catSprite;
@@ -66,6 +67,7 @@ namespace NineLives
             cc.minMoveDistance = 0f;
 
             mesh = transform.Find("Cat");
+            squash = mesh.GetComponent<SpringSquash>();
 
             flashRenderers = mesh.GetComponentsInChildren<SpriteRenderer>(true);
             flashBaseColors = new Color[flashRenderers.Length];
@@ -227,6 +229,14 @@ namespace NineLives
             if (JumpedThisStep) GameEvents.RaiseJumped(FeetPosition);
             if (HardLandedThisStep) GameEvents.RaiseHardLanded(FeetPosition);
             else if (LandedThisStep) GameEvents.RaiseLanded(FeetPosition);
+
+            // Jiggle any corpse we just landed on. (The cat's own squash listens to the jump/land
+            // GameEvents itself, so nothing to drive here.)
+            if ((LandedThisStep || HardLandedThisStep || BouncedThisStep) && surface != null)
+            {
+                var corpse = surface.GetComponent<Corpse>();
+                if (corpse != null) corpse.Jiggle();
+            }
             TickFootsteps(dt);
 
             float combinedX = Mathf.Clamp(platformVelX + motor.Velocity.x, -cfg.maxSpeed, cfg.maxSpeed);
@@ -240,10 +250,17 @@ namespace NineLives
                 cc.enabled = false; transform.position = p; cc.enabled = true;
             }
 
-            if (catSprite != null && Mathf.Abs(motor.Velocity.x) > 0.15f)
-                catSprite.localScale = new Vector3(
-                    Mathf.Sign(motor.Velocity.x) * Mathf.Abs(catSprite.localScale.x),
-                    catSprite.localScale.y, catSprite.localScale.z);
+            // Facing flip. SpringSquash is the sole writer of the Cat's localScale when present,
+            // so route the flip through it; fall back to a direct write only if it isn't wired yet.
+            if (Mathf.Abs(motor.Velocity.x) > 0.15f)
+            {
+                float sign = Mathf.Sign(motor.Velocity.x);
+                if (squash != null) squash.FacingSign = sign;
+                else if (catSprite != null)
+                    catSprite.localScale = new Vector3(
+                        sign * Mathf.Abs(catSprite.localScale.x),
+                        catSprite.localScale.y, catSprite.localScale.z);
+            }
 
             wasGrounded = grounded;
         }

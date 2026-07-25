@@ -16,6 +16,7 @@ namespace NineLives
         Rigidbody rb;
         BoxCollider col;
         MeshRenderer meshRenderer;
+        SpringSquash visualSquash;
         float stillFor;
         Transform ridingSurface;
         Vector3 ridingSurfaceLastPos;
@@ -30,6 +31,7 @@ namespace NineLives
             rb = GetComponent<Rigidbody>();
             col = GetComponent<BoxCollider>();
             meshRenderer = GetComponent<MeshRenderer>();
+            if (visualSquash == null) visualSquash = GetComponentInChildren<SpringSquash>();
 
             // Full reset so a pooled corpse comes back clean, not carrying settled/held state
             // from its previous life.
@@ -121,6 +123,9 @@ namespace NineLives
         }
 
         public void SetHeldPosition(Vector3 pos) => transform.position = pos;
+
+        /// Visual-only soft-body reaction when the player lands/bounces on this body.
+        public void Jiggle() => visualSquash?.Jiggle();
 
         /// Gently set down in place: re-freezes immediately as a solid platform.
         public void PutDown()
