@@ -207,6 +207,41 @@ presentation layer *listens*.
   play a death animation on the player later, raise the death event before deactivating.
 - **Not yet playtested in Play mode** — compiles clean, all refs verified wired via CLI.
 
+## Level-to-level transition
+
+Reaching the exit no longer hard-cuts. `GameManager.ExitSequence()` (coroutine) runs:
+cat `LevelExit` anim + pad anim + win SFX → `levelExitAnimTime` → diagonal wipe covers →
+next level swapped in behind black → `wipeBlackHoldTime` → wipe reveals → cat `LevelEntry`
+anim → `levelEntryAnimTime` → input back. All five durations are in `GameConfig`
+under **Level Transition**.
+
+- **`ScreenWipe.cs` + `Assets/Prefabs/ScreenWipe.prefab`** (scene root `ScreenWipe`, wired to
+  `GameManager.wipe`). One oversized black `Image` rotated `angle`° on Z — the tilt *is* the
+  diagonal edge, no shader or mask. It always sweeps the same direction (enters right to cover,
+  exits left to reveal) so cover+reveal reads as one continuous slide. Sizes itself from the
+  canvas rect at runtime (`ConstantPixelSize`, re-measured on resize), unscaled time,
+  `sortingOrder 500` so it's over HUD and menu. Drop a torn-edge sprite on the `Panel` Image
+  in the art pass; nothing in the code changes.
+- **`transitioning` flag** — while a transition runs, `GameManager.Update` returns immediately:
+  no pause, no restart, no debug level-jump, no camera pan (any of those mid-wipe would strand
+  a black panel). The coroutine ticks the player itself with zero input, so gravity/animation
+  keep running while control is dead. `StartLevel` force-clears the wipe when called *outside*
+  a transition (restart / game over / debug keys), so it can't get stuck.
+- **Level 0 has no entry beat** — it's first in the stack, there's nothing to transition from.
+  `EnterLevelSequence(0)` skips the reveal + entry animation entirely; menu → Level_0 is still
+  a straight cut. *Completing* Level_0 plays the full exit sequence like any other level.
+  Menu / Level Select → any other level starts already covered and reveals in.
+- **`BeginLife` holds back `LevelEntered`** when `deferEntryEvent` is set (transition only);
+  ordinary respawns raise it immediately as before.
+- **ExitPad animator** — `Assets/Animations/ExitPadAnimator.controller`: `Idle` (default) →
+  `Exit` on a `Play` trigger from AnyState, exit-times back to `Idle`. Both hold empty
+  placeholder clips (`Anim_ExitPad_Idle/Exit`, same key-a-nonexistent-child trick as the player
+  clips). The `Animator` is on the `ExitPad.prefab` **root**; `LevelExit.padAnimator` points at
+  it and fires `Play` on contact, and `ResetToInitial()` snaps back to `Idle` (a same-level
+  restart doesn't disable the object, so it'd otherwise stay in the reached pose).
+- **Not playtested in Play mode.** Compiles clean, all 8 in-scene ExitPads verified resolving
+  to their own animator + controller via CLI.
+
 ## Everything visualized is now a prefab/material asset (drag-and-drop art later)
 
 Prompted by the user: anything a future art pass would touch needs to be an Inspector-editable
@@ -333,6 +368,7 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/HangingPhysicsObject.cs` / `RopeVisual.cs` / `LooseProp.cs` | Hinge pendulum (cage, wrecking ball), its chain visual, and props rattling inside it. Pivot = `hangAnchor`. |
 | `Assets/Scripts/PlayerMessage.cs` / `MessageTrigger.cs` | Flashing hint above the cat's head; level-placed trigger volumes supply the text. |
 | `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
+| `Assets/Scripts/ScreenWipe.cs` | Diagonal cut to black between levels; `ScreenWipe.prefab` + scene root, driven by `GameManager.ExitSequence`. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |
 | `Assets/Scripts/PlayerAnimatorDriver.cs` | Drives `PlayerAnimator.controller` from player state. |
