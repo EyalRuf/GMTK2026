@@ -116,10 +116,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: PRESS ANYTHING TO CONTINUE
+  m_text: PRESS ANYTHING...
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 095a72fc8a19bcd41bc329c53522e9f5, type: 2}
+  m_sharedMaterial: {fileID: 3101485548591447867, guid: 095a72fc8a19bcd41bc329c53522e9f5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -143,8 +143,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -357,7 +357,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 469696e6a9de0094bae8341f284e76fb, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b381315ddc76ca644ba3f0869f9ff412, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
