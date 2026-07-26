@@ -54,11 +54,24 @@ MonoBehaviour:
   livesPerLevel: 9
   respawnGrace: 0.35
   respawnAtDeathSpot: 1
+  respawnOffsetY: 1.4
   respawnOffsetX: 1.5
   isTimedCorpseSpawn: 0
   showTimerSeconds: 1
   hideLevelUI: 1
   gameOverDeathAnimTime: 0.85
+  levelExitAnimTime: 1
+  wipeCoverTime: 0.45
+  wipeBlackHoldTime: 0.15
+  wipeRevealTime: 0.45
+  levelEntryAnimTime: 0.6
+  endingFocusPanTime: 1
+  endingFocusHoldTime: 1
+  endingFocusPadding: 2
+  endingFadeOutTime: 0
+  endingFadeInTime: 0
+  endingSplashMinHoldTime: 3
+  endingFadeToMenuTime: 1
   cameraOffset: {x: 0, y: 1.5, z: -15}
   cameraSmoothing: 0.16
   cameraLookAhead: 0.2

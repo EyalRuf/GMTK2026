@@ -296,6 +296,49 @@ under **Level Transition**.
 - **Not playtested in Play mode.** Compiles clean, all 8 in-scene ExitPads verified resolving
   to their own animator + controller via CLI.
 
+## Ending sequence (Level_9)
+
+Reaching the `EndingTrigger` box trigger in Level_9 replaces the normal green-exit-pad flow:
+control drops, the camera pans to frame the devil sprite (the cat's owner) alongside the cat,
+holds, fades to black, swaps in the splash art (credits baked into the art itself, not drawn by
+code), holds, then any key/mouse/gamepad button fades back to the main menu. All durations live
+in `GameConfig` under **Ending Sequence**.
+
+- **`EndingTrigger.cs`** — one-shot box trigger (`ILevelResettable`), placed once in the final
+  level. Has a `devilTarget` Transform field; `GameManager` finds it via
+  `GetComponentInChildren<EndingTrigger>` in `StartLevel` (only Level_9 has one) and wires it the
+  same way as `LevelExit`. **A level can have a `LevelExit`, an `EndingTrigger`, or both** — the
+  "no exit found" error only fires if neither is present, so Level_9 doesn't need a green pad.
+- **`GameManager.EndingSequence()`** (coroutine, sets `transitioning` like `ExitSequence`): pans
+  camera → holds → fades to black → hides HUD/player, shows `EndingUI` → fades in → holds
+  `endingSplashMinHoldTime` → shows the prompt → waits for `InputReader.AnyPressed` → fades to
+  black → returns to main menu (`ReturnToMainMenuFromEnding`, a StopAllCoroutines-free twin of
+  `OnMenuBackToMenu` since it's called from inside the coroutine it would otherwise kill) → fades
+  in on the menu.
+- **`CameraFollow.SetEndingFocus(a, b, padding)`/`ClearEndingFocus()`** — two-point framing
+  override, takes over `LateUpdate` in place of the normal follow. Perspective camera: dollies
+  back along Z until both points + padding fit the FOV. Orthographic: grows `orthographicSize`
+  instead. Both smooth in with the same damping as normal follow.
+- **`ScreenFade.cs`** (`ScreenFade.prefab`, scene root `ScreenFade`, sortingOrder 600, always
+  active) — plain full-screen black `CanvasGroup` alpha fade, unscaled time. Distinct from
+  `ScreenWipe` (diagonal slide, level-to-level): this is a straight crossfade, `FadeTo(alpha,
+  seconds)` + `IsBusy`.
+- **`EndingUI.cs`** (`EndingUI.prefab`, scene root `EndingUI`, sortingOrder 550, **starts
+  inactive**) — pure display: a full-screen `Splash` Image (the art, credits baked in) + a
+  `Prompt` TMP text ("PRESS ANYTHING TO CONTINUE"), toggled via `Show()`/`Hide()`/
+  `SetPromptVisible()`. All timing owned by `GameManager`, not this component.
+- **`InputReader.AnyPressed`** — any keyboard key, mouse button, or gamepad button pressed this
+  frame; drives the "press anything to continue" wait.
+- **Placeholder art only** — `Mat_Devil_Placeholder.mat` (dark red, slightly emissive) on a
+  `Devil_Placeholder` cube in Level_9 at local `(26, 1.2, 0)`, and the `EndingUI` splash `Image`
+  is a flat dark-indigo color, no sprite. **Not positioned carefully** — Level_9 is a fresh, mostly
+  empty level (just start/end platforms + one spike pit); the devil cube and the
+  `EndingTrigger` box (`(24.5, 1, 0)`, size `2.5×3×3`) sit on the end platform near
+  `CameraBounds` max-x. Move them once the level is actually built out. Swap the material/sprite
+  for real art later — no code changes needed either way.
+- **Not playtested in Play mode.** Compiles clean, all wiring (GameManager↔ScreenFade↔EndingUI,
+  Level_9's EndingTrigger↔Devil_Placeholder) verified via CLI.
+
 ## Everything visualized is now a prefab/material asset (drag-and-drop art later)
 
 Prompted by the user: anything a future art pass would touch needs to be an Inspector-editable
@@ -423,6 +466,7 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/PlayerMessage.cs` / `MessageTrigger.cs` | Flashing hint above the cat's head; level-placed trigger volumes supply the text. |
 | `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
 | `Assets/Scripts/ScreenWipe.cs` | Diagonal cut to black between levels; `ScreenWipe.prefab` + scene root, driven by `GameManager.ExitSequence`. |
+| `Assets/Scripts/ScreenFade.cs` / `EndingTrigger.cs` / `EndingUI.cs` | Ending cutscene: plain black fade, the Level_9 trigger box, the splash+prompt canvas. Driven by `GameManager.EndingSequence`. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |
 | `Assets/Scripts/PlayerAnimatorDriver.cs` | Drives `PlayerAnimator.controller` from player state. |

@@ -119,6 +119,22 @@ namespace NineLives
         [Tooltip("Seconds the cat's level-entry animation plays after the reveal before input unlocks.")]
         public float levelEntryAnimTime = 0.6f;
 
+        [Header("Ending Sequence")]
+        [Tooltip("Seconds for the camera to pan from the player into ending-focus framing (devil + cat).")]
+        public float endingFocusPanTime = 1.2f;
+        [Tooltip("Seconds to hold the ending-focus framing before fading to black.")]
+        public float endingFocusHoldTime = 2f;
+        [Tooltip("World-unit padding added around the devil+cat when framing the ending shot.")]
+        public float endingFocusPadding = 3f;
+        [Tooltip("Seconds for the fade to black after the ending-focus hold.")]
+        public float endingFadeOutTime = 1f;
+        [Tooltip("Seconds for the splash art to fade in from black.")]
+        public float endingFadeInTime = 1f;
+        [Tooltip("Seconds the splash art must be visible before any key/click/button dismisses it.")]
+        public float endingSplashMinHoldTime = 2f;
+        [Tooltip("Seconds for the fade to black before returning to the main menu.")]
+        public float endingFadeToMenuTime = 0.8f;
+
         [Header("Camera")]
         public Vector3 cameraOffset = new Vector3(0f, 1.5f, -15f);
         public float cameraSmoothing = 0.16f;

@@ -22,6 +22,8 @@ namespace NineLives
         public bool PrevLevelPressed;
         public bool NextLevelPressed;
 
+        public bool AnyPressed;
+
         public void Sample()
         {
             Move = 0f;
@@ -29,10 +31,12 @@ namespace NineLives
             LookUpHeld = LookDownHeld = false;
             CarryTogglePressed = ThrowPressed = false;
             PausePressed = PrevLevelPressed = NextLevelPressed = false;
+            AnyPressed = false;
 
             var k = Keyboard.current;
             if (k != null)
             {
+                AnyPressed |= k.anyKey.wasPressedThisFrame;
                 if (k.aKey.isPressed || k.leftArrowKey.isPressed) Move -= 1f;
                 if (k.dKey.isPressed || k.rightArrowKey.isPressed) Move += 1f;
                 JumpPressed |= k.spaceKey.wasPressedThisFrame;
@@ -63,6 +67,9 @@ namespace NineLives
                 CarryTogglePressed |= g.rightShoulder.wasPressedThisFrame;
                 ThrowPressed |= g.rightTrigger.wasPressedThisFrame;
                 PausePressed |= g.startButton.wasPressedThisFrame;
+                AnyPressed |= g.buttonSouth.wasPressedThisFrame || g.buttonNorth.wasPressedThisFrame
+                    || g.buttonEast.wasPressedThisFrame || g.buttonWest.wasPressedThisFrame
+                    || g.startButton.wasPressedThisFrame || g.selectButton.wasPressedThisFrame;
             }
 
             var m = Mouse.current;
@@ -71,6 +78,7 @@ namespace NineLives
                 MouseScreenPosition = m.position.ReadValue();
                 CarryTogglePressed |= m.rightButton.wasPressedThisFrame;
                 ThrowPressed |= m.leftButton.wasPressedThisFrame;
+                AnyPressed |= m.leftButton.wasPressedThisFrame || m.rightButton.wasPressedThisFrame || m.middleButton.wasPressedThisFrame;
             }
 
             Move = Mathf.Clamp(Move, -1f, 1f);

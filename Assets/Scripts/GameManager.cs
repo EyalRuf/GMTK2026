@@ -23,6 +23,10 @@ namespace NineLives
         public MenuUI menu;
         [Tooltip("Pre-placed ScreenWipe object: the diagonal cut to black between levels.")]
         public ScreenWipe wipe;
+        [Tooltip("Pre-placed ScreenFade object: plain alpha fade to/from black, used by the ending sequence.")]
+        public ScreenFade endingFade;
+        [Tooltip("Pre-placed EndingUI object (starts disabled): final splash art + continue prompt.")]
+        public EndingUI endingUI;
         [Tooltip("Corpse prefab: pooled at runtime under corpseRoot, never destroyed.")]
         public GameObject corpsePrefab;
         [Tooltip("Empty scene object the corpse pool is parented under.")]
@@ -30,7 +34,7 @@ namespace NineLives
         [Tooltip("AudioSource for looping background music; volume is driven by the music slider.")]
         public AudioSource musicSource;
 
-        enum State { MainMenu, Intro, Playing, Dying, LevelClear, GameOver, GameWin }
+        enum State { MainMenu, Intro, Playing, Dying, LevelClear, GameOver, GameWin, Ending }
         State state;
         float stateTimer;
 
@@ -146,7 +150,14 @@ namespace NineLives
 
             var exit = levelInstanceGo.GetComponentInChildren<LevelExit>(true);
             if (exit != null) exit.Init(OnExitReached);
-            else Debug.LogError($"Level '{levelInstance.name}' has no LevelExit in its children.");
+
+            // Only the final level has one — the ending cutscene trigger stands in for the
+            // normal green exit pad, so a level can have either (or, in theory, both).
+            var ending = levelInstanceGo.GetComponentInChildren<EndingTrigger>(true);
+            if (ending != null) ending.Init(OnEndingReached);
+
+            if (exit == null && ending == null)
+                Debug.LogError($"Level '{levelInstance.name}' has no LevelExit or EndingTrigger in its children.");
 
             foreach (var pickup in levelInstanceGo.GetComponentsInChildren<UpgradePickup>(true))
                 pickup.Init(config, OnUpgradePickedUp);
@@ -282,6 +293,10 @@ namespace NineLives
                 // LevelClear is driven entirely by ExitSequence (which runs with `transitioning`
                 // set, so this switch isn't reached); the state is just a re-entry guard.
                 case State.LevelClear:
+                    break;
+
+                // Same deal: EndingSequence runs with `transitioning` set, so this is never reached.
+                case State.Ending:
                     break;
 
                 case State.GameOver:
@@ -520,6 +535,89 @@ namespace NineLives
                 TickLocked(Time.unscaledDeltaTime);
                 yield return null;
             }
+        }
+
+        // --- Ending sequence ------------------------------------------------------------------
+        // Reaching the EndingTrigger box in the final level: control dies, the camera pans to
+        // frame the devil sprite + the cat, holds, fades to black, swaps in the splash art (credits
+        // baked into the art), holds, then any key/click/button fades back to the main menu. All
+        // durations are in GameConfig under "Ending Sequence".
+
+        void OnEndingReached(Transform devilTarget)
+        {
+            if (transitioning) return;
+            if (state != State.Playing && state != State.Intro) return;
+            StartCoroutine(EndingSequence(devilTarget));
+        }
+
+        IEnumerator EndingSequence(Transform devilTarget)
+        {
+            transitioning = true;
+            EnterState(State.Ending, float.PositiveInfinity);
+            hud.HideBanner();
+            corpseCarry.DropHeld();
+            corpseCarry.SetEnabled(false);
+
+            if (devilTarget != null) cam.SetEndingFocus(devilTarget, player.transform, config.endingFocusPadding);
+            yield return HoldLocked(config.endingFocusPanTime + config.endingFocusHoldTime);
+
+            endingFade.FadeTo(1f, config.endingFadeOutTime);
+            yield return HoldWhileFading();
+
+            // Screen is fully black here: safe to swap camera mode and hide the player/HUD.
+            cam.ClearEndingFocus();
+            hud.gameObject.SetActive(false);
+            player.gameObject.SetActive(false);
+            endingUI.Show();
+
+            endingFade.FadeTo(0f, config.endingFadeInTime);
+            yield return HoldWhileFading();
+
+            yield return HoldLocked(config.endingSplashMinHoldTime);
+            endingUI.SetPromptVisible(true);
+            yield return WaitForAnyPress();
+
+            endingFade.FadeTo(1f, config.endingFadeToMenuTime);
+            yield return HoldWhileFading();
+
+            endingUI.Hide();
+            ReturnToMainMenuFromEnding();
+
+            endingFade.FadeTo(0f, config.endingFadeToMenuTime);
+            yield return HoldWhileFading();
+
+            transitioning = false;
+        }
+
+        IEnumerator WaitForAnyPress()
+        {
+            while (!input.AnyPressed)
+            {
+                TickLocked(Time.unscaledDeltaTime);
+                yield return null;
+            }
+        }
+
+        IEnumerator HoldWhileFading()
+        {
+            while (endingFade.IsBusy)
+            {
+                TickLocked(Time.unscaledDeltaTime);
+                yield return null;
+            }
+        }
+
+        /// Like OnMenuBackToMenu, but called from inside the ending coroutine itself — must not
+        /// StopAllCoroutines (that would kill the coroutine calling it) or touch pause/timescale,
+        /// neither of which the ending sequence ever sets.
+        void ReturnToMainMenuFromEnding()
+        {
+            if (corpseCarry != null) corpseCarry.DropHeld();
+            ClearCorpses();
+            if (levelInstanceGo != null) { levelInstanceGo.SetActive(false); levelInstanceGo = null; levelInstance = null; }
+            hud.gameObject.SetActive(false);
+            state = State.MainMenu;
+            menu.ShowMainMenu();
         }
 
         /// Keeps gravity and animation running on the cat during a transition while every button
