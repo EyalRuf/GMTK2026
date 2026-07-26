@@ -171,21 +171,33 @@ namespace NineLives
             hud.SetTimer(timer.Remaining, timer.Normalized);
             hud.SetSouls(timer.Remaining, soulInterval);
 
-            BeginLife();
+            BeginLife(isNewLevelEntry: true);
             EnterState(State.Intro, config.hideLevelUI ? 0.5f : 1.9f);
             if (!config.hideLevelUI)
                 hud.Banner($"LEVEL {i + 1}", levelInstance.levelName, GreyboxFactory.Exit);
         }
 
-        void BeginLife()
+        /// isNewLevelEntry distinguishes a genuine level start (StartLevel) from an in-place
+        /// respawn after death (State.Dying): only the former plays the LevelEntry animation. A
+        /// respawn just reactivates the player where its already-pending Die trigger (armed back
+        /// in Die(), before the object was hidden) resumes on its own and plays DeathRespawn.
+        void BeginLife(bool isNewLevelEntry)
         {
             var spawnFeet = levelInstance.EntryFeet;
             if (config.respawnAtDeathSpot && hasDiedThisLevel && !lastDeathUnrecoverable)
-                spawnFeet = ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
+            {
+                // Prefer straight up (on top of the corpse you just left); only step aside to the
+                // left when the capsule doesn't fit there — under a low ceiling or a stacked corpse.
+                Vector3 above = lastDeathFeet + Vector3.up * config.respawnOffsetY;
+                spawnFeet = IsSpawnClear(above)
+                    ? above
+                    : ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
+            }
             player.Spawn(spawnFeet);
             // During a level transition the entry animation is held back until the wipe has
-            // revealed the new level — EnterLevelSequence raises it. Respawns raise it here.
-            if (!deferEntryEvent) GameEvents.RaiseLevelEntered(spawnFeet);
+            // revealed the new level — EnterLevelSequence raises it. A death respawn never raises
+            // it at all.
+            if (isNewLevelEntry && !deferEntryEvent) GameEvents.RaiseLevelEntered(spawnFeet);
             cam.Snap();
             timerStarted = false;
             graceLeft = config.respawnGrace;
@@ -199,13 +211,17 @@ namespace NineLives
         {
             for (int i = 0; i < 20; i++)
             {
-                Vector3 p0 = feet + Vector3.up * config.playerRadius;
-                Vector3 p1 = feet + Vector3.up * (config.playerHeight - config.playerRadius);
-                if (!Physics.CheckCapsule(p0, p1, config.playerRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore))
-                    return feet;
+                if (IsSpawnClear(feet)) return feet;
                 feet += Vector3.up * 0.5f;
             }
             return feet;
+        }
+
+        bool IsSpawnClear(Vector3 feet)
+        {
+            Vector3 p0 = feet + Vector3.up * config.playerRadius;
+            Vector3 p1 = feet + Vector3.up * (config.playerHeight - config.playerRadius);
+            return !Physics.CheckCapsule(p0, p1, config.playerRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore);
         }
 
         void Update()
@@ -259,7 +275,7 @@ namespace NineLives
                     if (stateTimer <= 0f)
                     {
                         if (livesLeft <= 0) EnterGameOver();
-                        else { BeginLife(); state = State.Playing; }
+                        else { BeginLife(isNewLevelEntry: false); state = State.Playing; }
                     }
                     break;
 
@@ -393,14 +409,16 @@ namespace NineLives
             hasDiedThisLevel = true;
             var kind = pendingUpgrade == UpgradeType.Trampoline ? CorpseKind.Trampoline : CorpseKind.Normal;
             Vector2 deathVelocity = player.Velocity;
+            // Recoverable death (sacrifice / natural timeout) = soul-leaves-body sequence;
+            // environmental death = poof. Also arms the Animator's Die trigger; since the player
+            // object goes inactive right after, that trigger stays pending and only actually plays
+            // (as DeathRespawn) once BeginLife reactivates the cat at the respawn point.
+            if (unrecoverable) GameEvents.RaisePoofDeath(lastDeathFeet);
+            else GameEvents.RaiseSacrificeDeath(lastDeathFeet);
             // Deactivate (and with it, the CharacterController collider) before spawning the
             // corpse so its clearance search doesn't treat the dying player as an obstacle to
             // dodge around — it can land right on the death spot instead of nearby.
             player.gameObject.SetActive(false);
-            // Recoverable death (sacrifice / natural timeout) = soul-leaves-body sequence;
-            // environmental death = poof. SpawnCorpse raises CorpseSpawned when a body appears.
-            if (unrecoverable) GameEvents.RaisePoofDeath(lastDeathFeet);
-            else GameEvents.RaiseSacrificeDeath(lastDeathFeet);
             if (spawnCorpse) SpawnCorpse(lastDeathFeet, deathVelocity, kind);
             timer.Stop();
             timerStarted = false;
@@ -630,7 +648,11 @@ namespace NineLives
         Corpse GetPooledCorpse()
         {
             foreach (var c in corpsePool)
-                if (c != null && !c.gameObject.activeSelf) return c;
+            {
+                if (c == null || c.gameObject.activeSelf) continue;
+                ReturnToPoolRoot(c);
+                return c;
+            }
             var go = Instantiate(corpsePrefab, corpseRoot);
             go.SetActive(false);
             var corpse = go.GetComponent<Corpse>();
@@ -668,7 +690,22 @@ namespace NineLives
 
         void ClearCorpses()
         {
-            foreach (var c in corpsePool) if (c != null) c.gameObject.SetActive(false);
+            foreach (var c in corpsePool)
+            {
+                if (c == null) continue;
+                ReturnToPoolRoot(c);
+                c.gameObject.SetActive(false);
+            }
+        }
+
+        /// A settled corpse parents itself onto whatever moving thing it came to rest on, which puts
+        /// it inside the level hierarchy. Pull it back under corpseRoot before anything disables a
+        /// level, or it gets deactivated with its carrier while still counting as in-use (activeSelf
+        /// stays true), and the pool leaks a corpse per level switch.
+        void ReturnToPoolRoot(Corpse c)
+        {
+            c.Detach();
+            if (c.transform.parent != corpseRoot) c.transform.SetParent(corpseRoot, true);
         }
     }
 }

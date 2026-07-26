@@ -8,15 +8,17 @@ namespace NineLives
     /// (landing on top, walking into it) is driven externally via ApplyImpact, called from
     /// PlayerController.OnControllerColliderHit; this component doesn't know about the player.
     [RequireComponent(typeof(Rigidbody), typeof(HingeJoint))]
-    public class HangingPhysicsObject : MonoBehaviour
+    public class HangingPhysicsObject : MonoBehaviour, ILevelResettable
     {
         public enum StartBehavior { AtRest, Kickstart }
 
         [Header("Rope / Chain")]
         [Tooltip("The fixed point this object hangs from. If left empty, ropeLength is used instead to place the anchor straight above this object's own pivot.")]
         public Transform hangAnchor;
-        [Tooltip("Used only when hangAnchor is not assigned: local distance above this object's pivot to hinge from.")]
+        [Tooltip("How far above this object's own pivot to hinge from. With hangAnchor empty it puts a virtual pivot there. With hangAnchor set it needs `mount` as well — then this is the knob for how far up the chains run.")]
         public float ropeLength = 1.5f;
+        [Tooltip("Optional, and only does anything alongside hangAnchor: the parent holding the anchor transforms (the platform prefab's `Mount`). Assign it and ropeLength becomes the per-instance chain-height knob — type a number and the mount slides in the Scene view. Leave empty to place the anchors by hand.")]
+        public Transform mount;
 
         [Header("Physics")]
         public float mass = 3f;
@@ -45,6 +47,9 @@ namespace NineLives
 
         Rigidbody rb;
         HingeJoint joint;
+        Vector3 startPos;
+        Quaternion startRot;
+        bool freshlyAwoken;
         float restAngleZ;
         float pivotInertia = 1f;
         float naturalFrequency = 1f;
@@ -82,8 +87,8 @@ namespace NineLives
                 Debug.LogWarning($"{name}: HingeJoint anchor {authoredAnchor} set in the Inspector is ignored — this component drives the pivot from " +
                                  (hangAnchor != null ? $"hangAnchor '{hangAnchor.name}'" : $"ropeLength {ropeLength}") +
                                  $", which resolves to {joint.anchor}. Move that instead.", this);
-            if (hangAnchor != null && !Mathf.Approximately(ropeLength, 1.5f))
-                Debug.LogWarning($"{name}: ropeLength {ropeLength} does nothing while hangAnchor '{hangAnchor.name}' is assigned — the anchor transform wins. Move the anchor to change the rope length.", this);
+            if (hangAnchor != null && mount == null && !Mathf.Approximately(ropeLength, 1.5f))
+                Debug.LogWarning($"{name}: ropeLength {ropeLength} does nothing while hangAnchor '{hangAnchor.name}' is assigned and mount is empty — the anchor transform wins. Move the anchor, or assign mount to drive it from ropeLength.", this);
             // Auto-configure computes the world anchor from whatever anchor/axis the joint has
             // the moment it's enabled — which happens before this Awake overrides those fields,
             // so it locks onto Unity's defaults instead of ours. Set it explicitly instead: with
@@ -99,6 +104,8 @@ namespace NineLives
                 joint.limits = limits;
             }
 
+            startPos = transform.position;
+            startRot = transform.rotation;
             restAngleZ = transform.eulerAngles.z;
             // A torque that reads the same on a light lantern and a 20kg wrecking ball has to be
             // scaled by what the object actually is: its inertia about the hinge (not its own
@@ -111,6 +118,62 @@ namespace NineLives
 
             if (startBehavior == StartBehavior.Kickstart)
                 rb.AddTorque(Vector3.forward * initialSwingForce, ForceMode.Impulse);
+            freshlyAwoken = true;
+        }
+
+        /// Levels are pre-placed and only enabled/disabled now, so a pendulum keeps its pose and its
+        /// momentum across a restart — it comes back mid-swing, or parked wherever the player shoved
+        /// it, and a rigidbody's velocity survives being disabled. Put the whole body back: authored
+        /// pose, no velocity, pivot re-derived, swing tracking cleared.
+        public void ResetToInitial()
+        {
+            if (rb == null) return; // never activated, so there's no captured pose to restore
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            transform.SetPositionAndRotation(startPos, startRot);
+            rb.position = startPos;
+            rb.rotation = startRot;
+
+            // connectedAnchor is a plain world point that only FixedUpdate refreshes from hangAnchor;
+            // re-derive it here so the first step after the reset solves against the right pivot even
+            // if a LinkedMover left the mount somewhere else (its own reset may run after this one).
+            if (hangAnchor != null)
+            {
+                joint.anchor = transform.InverseTransformPoint(hangAnchor.position);
+                joint.connectedAnchor = hangAnchor.position;
+            }
+            else joint.connectedAnchor = transform.TransformPoint(joint.anchor);
+
+            swingAmplitude = 0f;
+            halfSwingPeak = 0f;
+            lastAngularVel = 0f;
+
+            // Awake already kicked on the level's first entry; don't stack a second impulse on it.
+            if (startBehavior == StartBehavior.Kickstart && !freshlyAwoken)
+                rb.AddTorque(Vector3.forward * initialSwingForce, ForceMode.Impulse);
+            freshlyAwoken = false;
+        }
+
+        void OnValidate()
+        {
+            if (!Application.isPlaying) ApplyRopeLength();
+        }
+
+        /// Editor-time only: slides `mount`, and every anchor parented under it, so `hangAnchor`
+        /// lands exactly `ropeLength` above this object's pivot, then re-authors the HingeJoint so
+        /// the Scene gizmo agrees with the pivot Awake will compute. Deliberately not run at
+        /// runtime — LinkedMover caches the mount's starting position in its own Awake, and Unity
+        /// doesn't promise which Awake goes first, so moving the mount there is a coin flip.
+        void ApplyRopeLength()
+        {
+            if (mount == null || hangAnchor == null || ropeLength <= 0f) return;
+            if (!hangAnchor.IsChildOf(mount)) return;
+
+            float delta = transform.position.y + ropeLength - hangAnchor.position.y;
+            if (Mathf.Abs(delta) > 0.0001f) mount.position += Vector3.up * delta;
+
+            var hinge = GetComponent<HingeJoint>();
+            if (hinge != null) hinge.anchor = transform.InverseTransformPoint(hangAnchor.position);
         }
 
         void FixedUpdate()
