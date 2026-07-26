@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace NineLives
 {
-    /// Editor-placeable one-time pickup. Touch it to arm the next-corpse upgrade;
-    /// it then disappears until the level restarts.
+    /// Editor-placeable pickup. Touch it to arm the next-corpse upgrade; it hides itself and
+    /// respawns after GameConfig.powerupRespawnTime seconds.
     [RequireComponent(typeof(BoxCollider))]
     public class UpgradePickup : MonoBehaviour, ILevelResettable
     {
@@ -13,27 +13,45 @@ namespace NineLives
         public float bobSpeed = 2f;
 
         System.Action<UpgradeType> onPickedUp;
+        GameConfig config;
+        Collider col;
         Vector3 baseLocalPos;
         bool taken;
+        float respawnTimer;
 
         void Awake()
         {
-            GetComponent<BoxCollider>().isTrigger = true;
+            col = GetComponent<BoxCollider>();
+            col.isTrigger = true;
             baseLocalPos = transform.localPosition;
         }
 
-        public void Init(System.Action<UpgradeType> callback) { onPickedUp = callback; }
+        public void Init(GameConfig config, System.Action<UpgradeType> callback)
+        {
+            this.config = config;
+            onPickedUp = callback;
+        }
 
         public void ResetToInitial()
         {
             taken = false;
+            respawnTimer = 0f;
             transform.localPosition = baseLocalPos;
-            gameObject.SetActive(true);
+            SetVisible(true);
         }
 
         void Update()
         {
-            if (taken) return;
+            if (taken)
+            {
+                respawnTimer -= Time.deltaTime;
+                if (respawnTimer <= 0f)
+                {
+                    taken = false;
+                    SetVisible(true);
+                }
+                return;
+            }
             var p = baseLocalPos;
             p.y += Mathf.Sin(Time.time * bobSpeed) * bobHeight;
             transform.localPosition = p;
@@ -44,8 +62,15 @@ namespace NineLives
             if (taken) return;
             if (other.GetComponentInParent<PlayerController>() == null) return;
             taken = true;
+            respawnTimer = config != null ? config.powerupRespawnTime : 10f;
             onPickedUp?.Invoke(upgrade);
-            gameObject.SetActive(false);
+            SetVisible(false);
+        }
+
+        void SetVisible(bool visible)
+        {
+            foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = visible;
+            col.enabled = visible;
         }
     }
 }

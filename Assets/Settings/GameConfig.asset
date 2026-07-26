@@ -55,7 +55,9 @@ MonoBehaviour:
   respawnAtDeathSpot: 1
   respawnOffsetX: 1.5
   isTimedCorpseSpawn: 0
-  showTimerSeconds: 0
+  showTimerSeconds: 1
+  hideLevelUI: 1
+  gameOverDeathAnimTime: 0.85
   cameraOffset: {x: 0, y: 1.5, z: -15}
   cameraSmoothing: 0.16
   cameraLookAhead: 0.2

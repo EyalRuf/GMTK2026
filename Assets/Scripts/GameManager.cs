@@ -141,7 +141,9 @@ namespace NineLives
             else Debug.LogError($"Level '{levelInstance.name}' has no LevelExit in its children.");
 
             foreach (var pickup in levelInstanceGo.GetComponentsInChildren<UpgradePickup>(true))
-                pickup.Init(OnUpgradePickedUp);
+                pickup.Init(config, OnUpgradePickedUp);
+            foreach (var pickup in levelInstanceGo.GetComponentsInChildren<RubberPickup>(true))
+                pickup.Init(config);
             pendingUpgrade = UpgradeType.None;
             corpseCarry.SetEnabled(false);
             player.JumpMultiplier = 1f;
@@ -149,6 +151,7 @@ namespace NineLives
             hud.SetLevel(levelInstance.levelName, i + 1, levels.Count);
             hud.SetLives(livesLeft, config.livesPerLevel);
             hud.SetHint(levelInstance.hint);
+            hud.SetChromeVisible(!config.hideLevelUI);
 
             soulInterval = levelInstance.timer;
             float totalDuration = soulInterval * config.livesPerLevel;
@@ -161,8 +164,9 @@ namespace NineLives
             hud.SetSouls(timer.Remaining, soulInterval);
 
             BeginLife();
-            EnterState(State.Intro, 1.9f);
-            hud.Banner($"LEVEL {i + 1}", levelInstance.levelName, GreyboxFactory.Exit);
+            EnterState(State.Intro, config.hideLevelUI ? 0.5f : 1.9f);
+            if (!config.hideLevelUI)
+                hud.Banner($"LEVEL {i + 1}", levelInstance.levelName, GreyboxFactory.Exit);
         }
 
         void BeginLife()
@@ -409,7 +413,8 @@ namespace NineLives
             timer.Stop();
             bool last = levelIndex + 1 >= levels.Count;
             EnterState(State.LevelClear, 1.7f);
-            hud.Banner(last ? "FINAL EXIT" : "EXIT!", last ? "" : "Nice.", GreyboxFactory.Exit);
+            if (!config.hideLevelUI)
+                hud.Banner(last ? "FINAL EXIT" : "EXIT!", last ? "" : "Nice.", GreyboxFactory.Exit);
         }
 
         void EnterGameOver()

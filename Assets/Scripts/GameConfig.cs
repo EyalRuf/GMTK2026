@@ -70,6 +70,10 @@ namespace NineLives
         [Tooltip("Player's own jump velocity multiplier while the Trampoline upgrade is armed this life.")]
         public float trampolinePlayerJumpMultiplier = 1.35f;
 
+        [Header("Powerups")]
+        [Tooltip("Seconds after a powerup pickup (Trampoline upgrade, Rubber body, etc.) is taken before it respawns.")]
+        public float powerupRespawnTime = 10f;
+
         [Header("Corpse Carry Upgrade")]
         [Tooltip("How close to a settled corpse the player must be to pick it up.")]
         public float carryPickupRange = 2.2f;
@@ -96,6 +100,8 @@ namespace NineLives
         public bool isTimedCorpseSpawn = true;
         [Tooltip("UI ONLY: show the numeric countdown next to the soul icons. When off, only the draining soul icons indicate remaining time.")]
         public bool showTimerSeconds = true;
+        [Tooltip("UI ONLY: hide the level entry/exit banners, level name, hint text, and button-info UI. Movement unlocks 0.5s after spawning instead of waiting for the banner.")]
+        public bool hideLevelUI = false;
         [Tooltip("Seconds the cat's death animation plays under the OUT OF LIVES banner before it's hidden (should match Anim_DeathRespawn's length).")]
         public float gameOverDeathAnimTime = 0.85f;
 

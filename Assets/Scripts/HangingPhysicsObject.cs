@@ -115,6 +115,13 @@ namespace NineLives
 
         void FixedUpdate()
         {
+            // connectedBody is null, so connectedAnchor is a plain world-space point that PhysX
+            // never re-reads from hangAnchor on its own — without this, a moving anchor (e.g. a
+            // LinkedMover lowering the mount) leaves the joint clamped to its Awake-time position
+            // and the cage stays put while everything else (chain visuals, mount) moves around it.
+            if (hangAnchor != null)
+                joint.connectedAnchor = hangAnchor.position;
+
             if (!Mathf.Approximately(gravityScale, 1f))
                 rb.AddForce(Physics.gravity * (gravityScale - 1f) * rb.mass, ForceMode.Force);
 

@@ -2,10 +2,10 @@ using UnityEngine;
 
 namespace NineLives
 {
-    /// Self-contained "rubber body" pickup. Touch it and the cat's SpringSquash starts showing
-    /// exaggerated squash-and-stretch for the rest of the life; it clears automatically on death
-    /// (the cat's SpringSquash resets itself when the player object respawns). No GameManager or
-    /// GameConfig involvement — drop the prefab in a level and it works.
+    /// "Rubber body" pickup. Touch it and the cat's SpringSquash starts showing exaggerated
+    /// squash-and-stretch for the rest of the life; it clears automatically on death (the cat's
+    /// SpringSquash resets itself when the player object respawns). Hides itself and respawns
+    /// after GameConfig.powerupRespawnTime seconds.
     [RequireComponent(typeof(BoxCollider))]
     public class RubberPickup : MonoBehaviour, ILevelResettable
     {
@@ -13,25 +13,41 @@ namespace NineLives
         public float bobHeight = 0.2f;
         public float bobSpeed = 2f;
 
+        GameConfig config;
+        Collider col;
         Vector3 baseLocalPos;
         bool taken;
+        float respawnTimer;
 
         void Awake()
         {
-            GetComponent<BoxCollider>().isTrigger = true;
+            col = GetComponent<BoxCollider>();
+            col.isTrigger = true;
             baseLocalPos = transform.localPosition;
         }
+
+        public void Init(GameConfig config) { this.config = config; }
 
         public void ResetToInitial()
         {
             taken = false;
+            respawnTimer = 0f;
             transform.localPosition = baseLocalPos;
-            gameObject.SetActive(true);
+            SetVisible(true);
         }
 
         void Update()
         {
-            if (taken) return;
+            if (taken)
+            {
+                respawnTimer -= Time.deltaTime;
+                if (respawnTimer <= 0f)
+                {
+                    taken = false;
+                    SetVisible(true);
+                }
+                return;
+            }
             var p = baseLocalPos;
             p.y += Mathf.Sin(Time.time * bobSpeed) * bobHeight;
             transform.localPosition = p;
@@ -45,7 +61,14 @@ namespace NineLives
             var squash = player.GetComponentInChildren<SpringSquash>(true);
             if (squash != null) squash.SetRubber(true);
             taken = true;
-            gameObject.SetActive(false);
+            respawnTimer = config != null ? config.powerupRespawnTime : 10f;
+            SetVisible(false);
+        }
+
+        void SetVisible(bool visible)
+        {
+            foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = visible;
+            col.enabled = visible;
         }
     }
 }
