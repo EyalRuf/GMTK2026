@@ -12,6 +12,16 @@ namespace NineLives
         [SerializeField] Material trampolineMat;
         [SerializeField] Material trampolineSettledMat;
 
+        [Header("Bob (dip when landed on)  — tuned here, not in GameConfig")]
+        [Tooltip("Downward velocity impulse when something lands on the body.")]
+        [SerializeField] float bobKick = 4f;
+        [Tooltip("Higher = springs back faster.")]
+        [SerializeField] float bobStiffness = 180f;
+        [Tooltip("Higher = settles with fewer wobbles.")]
+        [SerializeField] float bobDamping = 12f;
+        [Tooltip("Max dip depth in meters. Keep small so the cat never loses footing.")]
+        [SerializeField] float bobMaxDepth = 0.12f;
+
         GameConfig cfg;
         Rigidbody rb;
         BoxCollider col;
@@ -20,6 +30,7 @@ namespace NineLives
         float stillFor;
         Transform ridingSurface;
         Vector3 ridingSurfaceLastPos;
+        float bobValue, bobVel, bobApplied;
         public bool Settled { get; private set; }
         public CorpseKind Kind { get; private set; }
         public bool Held { get; private set; }
@@ -32,6 +43,9 @@ namespace NineLives
             col = GetComponent<BoxCollider>();
             meshRenderer = GetComponent<MeshRenderer>();
             if (visualSquash == null) visualSquash = GetComponentInChildren<SpringSquash>();
+            // Face the way the cat was moving at death. OnEnable doesn't reset FacingSign, so this
+            // sticks across pooled reuse; SpringSquash.LateUpdate applies it to the Cat's scale.x.
+            if (visualSquash != null) visualSquash.FacingSign = PlayerController.LastFacingSign;
 
             // Full reset so a pooled corpse comes back clean, not carrying settled/held state
             // from its previous life.
@@ -39,6 +53,7 @@ namespace NineLives
             Held = false;
             stillFor = 0f;
             ridingSurface = null;
+            ResetBob();
             col.enabled = true;
             rb.isKinematic = false; // must precede setting linearVelocity
 
@@ -118,14 +133,45 @@ namespace NineLives
             Held = true;
             Settled = false;
             stillFor = 0f;
+            ResetBob();
             rb.isKinematic = true;
             GetComponent<BoxCollider>().enabled = false;
         }
 
         public void SetHeldPosition(Vector3 pos) => transform.position = pos;
 
-        /// Visual-only soft-body reaction when the player lands/bounces on this body.
-        public void Jiggle() => visualSquash?.Jiggle();
+        /// Soft-body reaction when the player lands/bounces on this body: the art squashes
+        /// (visual only) and the whole body dips and springs back (moves the transform, so a
+        /// cat riding this surface follows the dip).
+        public void Jiggle()
+        {
+            visualSquash?.Jiggle();
+            bobVel -= bobKick;
+        }
+
+        /// Vertical dip/spring, applied as an additive Y offset on top of whatever the physics /
+        /// settle / ride logic set this frame — remove last frame's offset, add this frame's — so
+        /// it never fights the base position. Runs after FixedUpdate; a settled corpse is kinematic
+        /// so nothing else writes position.y here.
+        void LateUpdate()
+        {
+            float dt = Time.deltaTime;
+            if (dt > 0f)
+            {
+                bobVel += (-bobStiffness * bobValue - bobDamping * bobVel) * dt;
+                bobValue += bobVel * dt;
+                bobValue = Mathf.Clamp(bobValue, -bobMaxDepth, bobMaxDepth);
+            }
+            float delta = bobValue - bobApplied;
+            if (delta != 0f) transform.position += Vector3.up * delta;
+            bobApplied = bobValue;
+        }
+
+        void ResetBob()
+        {
+            if (bobApplied != 0f) transform.position -= Vector3.up * bobApplied;
+            bobValue = bobVel = bobApplied = 0f;
+        }
 
         /// Gently set down in place: re-freezes immediately as a solid platform.
         public void PutDown()
@@ -142,6 +188,7 @@ namespace NineLives
             Held = false;
             Settled = false;
             stillFor = 0f;
+            ResetBob();
             GetComponent<BoxCollider>().enabled = true;
             rb.isKinematic = false;
             rb.linearVelocity = velocity;
