@@ -1524,6 +1524,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4854237861695356994, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6856934790414965786, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.31008673
@@ -1568,6 +1572,10 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 1025988847
       objectReference: {fileID: 0}
+    - target: {fileID: 9129996465286024859, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: dcb868c494b4bc8408d40e75ed39f45b, type: 2}
     - target: {fileID: 9167526454246541355, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
       propertyPath: m_IsActive
       value: 0

@@ -52,22 +52,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 899c54efeace73346a0a16faa3afe726, type: 3}
   m_Name: Vignette
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Vignette
-  active: 1
+  active: 0
   color:
     m_OverrideState: 1
-    m_Value: {r: 0.12, g: 0.02, b: 0.02, a: 1}
+    m_Value: {r: 0.341, g: 0.05499999, b: 0.05499999, a: 1}
   center:
     m_OverrideState: 1
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.28
+    m_Value: 0.178
   smoothness:
     m_OverrideState: 1
-    m_Value: 0.4
+    m_Value: 0.327
   rounded:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,7 +117,7 @@ MonoBehaviour:
     m_Value: 65472
   tint:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 1, g: 0.5943396, b: 0.7562664, a: 1}
   highQualityFiltering:
     m_OverrideState: 1
     m_Value: 1
@@ -158,7 +158,7 @@ MonoBehaviour:
     m_Value: {r: 0.5, g: 0.32, b: 0.12, a: 0}
   balance:
     m_OverrideState: 1
-    m_Value: 34
+    m_Value: 42
 --- !u!114 &5435289471700407739
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -174,7 +174,7 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: 0.15
+    m_Value: 0.1
   contrast:
     m_OverrideState: 1
     m_Value: 5
@@ -199,7 +199,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 221518ef91623a7438a71fef23660601, type: 3}
   m_Name: WhiteBalance
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.WhiteBalance
-  active: 1
+  active: 0
   temperature:
     m_OverrideState: 1
     m_Value: 8
