@@ -897,7 +897,7 @@ AnimationClip:
         outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
       - serializedVersion: 3
         time: 2
-        value: {x: -0, y: 0, z: 86.682236}
+        value: {x: 0, y: 0, z: 86.682236}
         inSlope: {x: 0, y: 0, z: 0}
         outSlope: {x: 0, y: 0, z: 0}
         tangentMode: 0
@@ -1717,6 +1717,15 @@ AnimationClip:
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 2
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -1731,6 +1740,15 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 2
         value: 1
         inSlope: Infinity
         outSlope: Infinity
@@ -1759,6 +1777,15 @@ AnimationClip:
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 2
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -1773,6 +1800,15 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 2
         value: 1
         inSlope: Infinity
         outSlope: Infinity
@@ -7188,7 +7224,7 @@ AnimationClip:
         outWeight: 0.33333334
       - serializedVersion: 3
         time: 2
-        value: -0
+        value: 0
         inSlope: 0
         outSlope: 0
         tangentMode: 34
@@ -7906,6 +7942,15 @@ AnimationClip:
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 2
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -7920,6 +7965,15 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 2
         value: 1
         inSlope: Infinity
         outSlope: Infinity
@@ -7948,6 +8002,15 @@ AnimationClip:
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 2
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -7962,6 +8025,15 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
+        value: 1
+        inSlope: Infinity
+        outSlope: Infinity
+        tangentMode: 103
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 2
         value: 1
         inSlope: Infinity
         outSlope: Infinity
@@ -7986,7 +8058,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7/bone_8
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -7998,7 +8070,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7/bone_8
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8010,151 +8082,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_L
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_L
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_L
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7/bone_8
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8202,186 +8130,6 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Necklace1
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Necklace1
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Necklace1
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_R
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_R
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_R
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
     path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2
     classID: 4
     script: {fileID: 0}
@@ -8407,42 +8155,6 @@ AnimationClip:
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
     path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2/Tounge3
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2/Tounge3
-    classID: 4
-    script: {fileID: 0}
-    flags: 0
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2/Tounge3
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8490,7 +8202,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_L/EAR_L_12
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_R
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8502,7 +8214,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_L/EAR_L_12
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_R
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8514,7 +8226,259 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_L/EAR_L_12
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_R
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Necklace1
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Necklace1
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Necklace1
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_L
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_L
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Whisker_L
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2/Tounge3
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2/Tounge3
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/Mouth/Tounge1/Tounge2/Tounge3
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R/EAR_R_13
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R/EAR_R_13
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R/EAR_R_13
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8598,6 +8562,78 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
     path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7
     classID: 4
     script: {fileID: 0}
@@ -8634,7 +8670,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7/bone_8
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8646,7 +8682,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7/bone_8
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8658,7 +8694,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6/bone_7/bone_8
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8670,7 +8706,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R/EAR_R_13
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8682,7 +8718,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R/EAR_R_13
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -8694,7 +8730,43 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_R/EAR_R_13
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Bottom_Body/bone_3/bone_4/bone_5/bone_6
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.z
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_L/EAR_L_12
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.y
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_L/EAR_L_12
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalEulerAngles.x
+    path: Cat_Scaler/CAT_CUTS_Resize/Main_Body/Upper_body/Head_Bone/INSIDE_Head/EAR_L/EAR_L_12
     classID: 4
     script: {fileID: 0}
     flags: 0
