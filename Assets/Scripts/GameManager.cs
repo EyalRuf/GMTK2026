@@ -181,10 +181,19 @@ namespace NineLives
         {
             var spawnFeet = levelInstance.EntryFeet;
             if (config.respawnAtDeathSpot && hasDiedThisLevel && !lastDeathUnrecoverable)
-                spawnFeet = ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
+            {
+                // Prefer straight up (on top of the corpse you just left); only step aside to the
+                // left when the capsule doesn't fit there — under a low ceiling or a stacked corpse.
+                Vector3 above = lastDeathFeet + Vector3.up * config.respawnOffsetY;
+                spawnFeet = IsSpawnClear(above)
+                    ? above
+                    : ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
+            }
             player.Spawn(spawnFeet);
             // During a level transition the entry animation is held back until the wipe has
-            // revealed the new level — EnterLevelSequence raises it. Respawns raise it here.
+            // revealed the new level — EnterLevelSequence raises it. Respawns raise it here — it's
+            // also what the Animator's CorpseState relies on to transition back out (see
+            // PlayerAnimator.controller: CorpseState -> LevelEntry on the LevelEnter trigger).
             if (!deferEntryEvent) GameEvents.RaiseLevelEntered(spawnFeet);
             cam.Snap();
             timerStarted = false;
@@ -199,13 +208,17 @@ namespace NineLives
         {
             for (int i = 0; i < 20; i++)
             {
-                Vector3 p0 = feet + Vector3.up * config.playerRadius;
-                Vector3 p1 = feet + Vector3.up * (config.playerHeight - config.playerRadius);
-                if (!Physics.CheckCapsule(p0, p1, config.playerRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore))
-                    return feet;
+                if (IsSpawnClear(feet)) return feet;
                 feet += Vector3.up * 0.5f;
             }
             return feet;
+        }
+
+        bool IsSpawnClear(Vector3 feet)
+        {
+            Vector3 p0 = feet + Vector3.up * config.playerRadius;
+            Vector3 p1 = feet + Vector3.up * (config.playerHeight - config.playerRadius);
+            return !Physics.CheckCapsule(p0, p1, config.playerRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore);
         }
 
         void Update()
@@ -393,15 +406,19 @@ namespace NineLives
             hasDiedThisLevel = true;
             var kind = pendingUpgrade == UpgradeType.Trampoline ? CorpseKind.Trampoline : CorpseKind.Normal;
             Vector2 deathVelocity = player.Velocity;
-            // Deactivate (and with it, the CharacterController collider) before spawning the
-            // corpse so its clearance search doesn't treat the dying player as an obstacle to
-            // dodge around — it can land right on the death spot instead of nearby.
-            player.gameObject.SetActive(false);
+            // Freeze the animator-driving params before the death event fires so the Die trigger's
+            // pose actually sticks instead of being stomped by this frame's live Speed/Grounded.
+            player.EnterDeathPose();
             // Recoverable death (sacrifice / natural timeout) = soul-leaves-body sequence;
             // environmental death = poof. SpawnCorpse raises CorpseSpawned when a body appears.
             if (unrecoverable) GameEvents.RaisePoofDeath(lastDeathFeet);
             else GameEvents.RaiseSacrificeDeath(lastDeathFeet);
+            // Disable just the collider (not the whole object — that would also stop the Animator
+            // from processing the trigger it was just given) so the corpse's clearance search
+            // doesn't treat the dying player as an obstacle to dodge around.
+            player.SetColliderEnabled(false);
             if (spawnCorpse) SpawnCorpse(lastDeathFeet, deathVelocity, kind);
+            player.SetColliderEnabled(true);
             timer.Stop();
             timerStarted = false;
             livesLeft--;
@@ -630,7 +647,11 @@ namespace NineLives
         Corpse GetPooledCorpse()
         {
             foreach (var c in corpsePool)
-                if (c != null && !c.gameObject.activeSelf) return c;
+            {
+                if (c == null || c.gameObject.activeSelf) continue;
+                ReturnToPoolRoot(c);
+                return c;
+            }
             var go = Instantiate(corpsePrefab, corpseRoot);
             go.SetActive(false);
             var corpse = go.GetComponent<Corpse>();
@@ -668,7 +689,22 @@ namespace NineLives
 
         void ClearCorpses()
         {
-            foreach (var c in corpsePool) if (c != null) c.gameObject.SetActive(false);
+            foreach (var c in corpsePool)
+            {
+                if (c == null) continue;
+                ReturnToPoolRoot(c);
+                c.gameObject.SetActive(false);
+            }
+        }
+
+        /// A settled corpse parents itself onto whatever moving thing it came to rest on, which puts
+        /// it inside the level hierarchy. Pull it back under corpseRoot before anything disables a
+        /// level, or it gets deactivated with its carrier while still counting as in-use (activeSelf
+        /// stays true), and the pool leaks a corpse per level switch.
+        void ReturnToPoolRoot(Corpse c)
+        {
+            c.Detach();
+            if (c.transform.parent != corpseRoot) c.transform.SetParent(corpseRoot, true);
         }
     }
 }

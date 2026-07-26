@@ -24,6 +24,32 @@ Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_
 - **Death countdown** — `LifeTimer`; per-level duration, resets each life, tick SFX under 3s.
 - **Corpses** — `Corpse.cs`: physics box, freezes to a solid platform after settling. **Normal
   corpses are no longer bouncy** — just a solid climbable platform (the base, power-less case).
+  - **Settling on something that moves parents the corpse to it** (`Attach`/`Detach`): a
+    `MovingPlatform`, a `LinkedMover` gate/lift, a `HangingPhysicsObject` cage, or a corpse that is
+    itself attached — so stacks chain and the whole pile rides along. It inherits the carrier's
+    tilt. **This is a transform relationship only — a corpse must have zero physics influence on
+    what it rides** (user's explicit call, and the reason two fancier attempts were thrown away):
+    - `Physics.IgnoreCollision` drops contact between the corpse and every non-kinematic rigidbody
+      up its carrier chain. A settled corpse is kinematic = infinitely heavy, so contact with a
+      hanging cage can only resolve by shoving the cage — a corpse sitting on it would kick it
+      around forever, much worse once the player touched it. Glued on by the hierarchy, that
+      contact has nothing left to solve, so it's dropped. Restored on `Detach`.
+    - `LateUpdate` **re-asserts `attachLocalPos`/`attachLocalRot` every frame.** A rigidbody's
+      transform can still be written from its own (stale) physics pose, which under a carrier that
+      physics itself moves cancels the hierarchy's motion out. Re-asserting makes the attachment
+      rigid no matter what else wrote the transform. The landing bob then goes on top as a world-Y
+      offset with `bobApplied` zeroed (the base pose is re-established every frame, nothing to undo).
+    - **Do not** try a `FixedJoint` weld instead: mass-6 corpse + the cage's 33-unit hinge with
+      `enablePreprocessing = false` is an unstable joint chain, and it was dramatically worse.
+  - Settle detection measures velocity **relative to a physics-driven carrier**
+    (`carrierBody.GetPointVelocity`) — on a swinging cage an absolute test never reaches rest, so
+    the corpse would never settle and never attach. Transform-driven carriers (platform/lift) are
+    still hand-carried by position delta until they attach, and there velocity ≈ 0 already.
+  - **Cleanup must go through `GameManager.ReturnToPoolRoot`** (called from `ClearCorpses` and
+    `GetPooledCorpse`): a parented corpse lives inside the level hierarchy, so disabling a level
+    would deactivate it while `activeSelf` stayed true — the pool would treat it as in-use and leak
+    one corpse per level switch. `Detach()` also drops anything attached on top, and restores the
+    authored localScale/rotation. `PickUp()` detaches.
 - **Upgrade pickups** — one-time trigger pickups (`UpgradePickup.cs`, prefabs
   `Assets/Prefabs/Upgrade_Trampoline.prefab` / `Upgrade_Carry.prefab`, not yet placed in any
   level — drag into a level prefab to use) that arm an effect for the player's *current life
@@ -45,8 +71,10 @@ Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_
   `plates` dragged in it moves continuously forever; with plates linked it only moves while any
   is pressed (freezes in place otherwise) — same start/stop puzzle idea as `LinkedMover`, but
   looping instead of open/close. `PlayerController` rides it by tracking the platform's position
-  delta each frame while grounded on it (works for horizontal and vertical travel); corpses are
-  **not** carried by it yet. Prefab: `Assets/Prefabs/MovingPlatform.prefab` (orange, default
+  delta each frame while grounded on it (works for horizontal and vertical travel); corpses ride it
+  by delta until they settle, then parent to it (see Corpses). `PlayerController.Probe` now reports
+  the corpse it landed on separately from the ride target, since an attached corpse's
+  `GetComponentInParent<MovingPlatform>` resolves to the platform. Prefab: `Assets/Prefabs/MovingPlatform.prefab` (orange, default
   scale 3×0.5×3, default path +4 on X) — drag into a level like any other block, tweak
   `moveOffset`/`speed`/`waitTime`/`plates` in the Inspector.
 - **Levels are hand-editable in the Unity Editor**, not code. Each level is a **prefab**
@@ -98,12 +126,34 @@ Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_
     `Idle1` if `Die` never comes.
 - **Hanging physics** — `HangingPhysicsObject.cs` + `RopeVisual.cs`. A Rigidbody + HingeJoint
   pendulum in the XY plane. Prefabs: `HangingPhysicsTrap.prefab` (single-chain wrecking ball, in
-  Level_4) and `HangingPhysicsPlatform.prefab` (two-chain cage, in Level_5).
+  Level_4) and `HangingPhysicsPlatform.prefab` (two-chain cage, in Levels 5/6/7).
+  - **Chain height is `ropeLength` on `HangingPhysicsObject`, per instance.** The platform prefab
+    ships at 33.4 — a ceiling well off the top of the screen. Type a new number on any instance and
+    `OnValidate` slides `mount` (the field naming the prefab's `Mount`, which parents all three
+    anchors), re-authors the `HingeJoint`, and the ropes redraw live in the Scene view. The platform
+    itself never moves, so retuning a level's chain height can't shift its layout. **Edit-time
+    only** — deliberately not applied in `Awake`, because `LinkedMover` caches the mount's start
+    position in *its* Awake and the order isn't guaranteed. Don't drag `Mount` by hand; the next
+    Inspector touch snaps it back to `ropeLength`.
+  - Longer pendulum = slower, wider swing for the same bump, so `maxSwingAngleDeg` is 7 (not 30) at
+    33.4 — that preserves the ±4u maximum horizontal reach the old short rope had. Scale it with
+    `ropeLength` if you change the height a lot.
+  - **`RopeVisual.links` / `linkWorldLength`** — when `links` is set (the platform's `RopeMesh`), the
+    chain-link sprites hold a constant world size and only as many as fit are shown, so a long rope
+    tiles instead of smearing 4 stretched links over it. 32 links are pre-placed per rope (clean up
+    to ~62u); past that they stretch to fill. Leave `links` empty for plain stretch-to-fit — the
+    trap still does that.
   - **`hangAnchor` is the only source of truth for the pivot.** `Awake()` overwrites the
     `HingeJoint`'s `anchor`/`connectedAnchor` from it, and `ropeLength` is read *only* when
     `hangAnchor` is null. Authoring either one in the Inspector used to be silently discarded —
     the Scene view drew one pivot while the game swung around another. Both cases now log a
     warning naming what won. **To change the rope length, move the anchor transform.**
+  - **Level reset restores the whole body** (`ResetToInitial`, `ILevelResettable`): authored
+    position/rotation, zeroed linear + angular velocity, joint pivot re-derived from `hangAnchor`
+    (`connectedAnchor` is a world point that otherwise only `FixedUpdate` refreshes), swing-amplitude
+    tracking cleared, and the `Kickstart` impulse re-applied — skipped on the level's first entry,
+    where `Awake` already did it. Needed because levels are only enabled/disabled now, and a
+    rigidbody keeps its pose *and* its velocity across that. `LooseProp` snaps back the same way.
   - **Idle sway** (`idleSway` / `idleSwayAngle` / `idleSwayResponse`) — keeps an object gently
     swinging forever instead of settling into a dead pose. Measures the amplitude of each
     half-swing and, while it's under target, pumps torque along the current direction of travel,
@@ -118,7 +168,10 @@ Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_
     `ChainAttach_L/R` on the cage, 4 links tiling the span exactly. Anything offset sideways from
     its rope's own pivot will sweep an arc at the top.
   - Player contact goes through `PlayerController.OnControllerColliderHit` → `ApplyImpact`; the
-    cage is stood on via the existing `surface` platform-riding path. `ApplyImpact` also raises
+    cage is stood on via the existing `surface` platform-riding path. A corpse settling on the cage
+    parents to it and stops colliding with it (see Corpses), so it never pushes the swing; landing on
+    *that* corpse imparts no impulse either, since `OnControllerColliderHit` only forwards hits whose
+    own rigidbody is the cage. `ApplyImpact` also raises
     `Impacted(impulseMagnitude)` — the hook cosmetic listeners use instead of sniffing physics.
   - **`LooseProp.cs`** — props rattling inside a hanging object (the `Bone` and `Skull` in the
     Level_5 cage, where it's already attached). No physics, no collider: it subscribes to
@@ -165,7 +218,8 @@ Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_
   Level switching = disable all, enable the target, reset it. `StartLevel` walks the level's
   `GetComponentsInChildren<ILevelResettable>(true)` and calls `ResetToInitial()`.
   - **`ILevelResettable`** (`ILevelResettable.cs`) — implemented by `MovingPlatform`,
-    `LinkedMover`, `PressurePlate`, `UpgradePickup`, `LevelExit`. Restores each back to its
+    `LinkedMover`, `PressurePlate`, `UpgradePickup`, `LevelExit`, `HangingPhysicsObject`,
+    `LooseProp`. Restores each back to its
     `Awake`-captured authored state (position, closed gate, released plate, un-taken pickup,
     un-triggered exit) — the reset Destroy/Instantiate used to give for free.
   - **Corpses are pooled** under `Corpses`: `GameManager.GetPooledCorpse()` reuses a disabled one

@@ -78,6 +78,10 @@ namespace NineLives
                 flashBaseColors[i] = flashRenderers[i].color;
         }
 
+        /// Toggles just the CharacterController, e.g. so a physics clearance check (corpse
+        /// placement) doesn't treat the still-active, mid-death-animation player as an obstacle.
+        public void SetColliderEnabled(bool enabled) => cc.enabled = enabled;
+
         public void Spawn(Vector3 feet)
         {
             cc.enabled = false;
@@ -188,7 +192,7 @@ namespace NineLives
                 if (verticalDelta.sqrMagnitude > 0f) cc.Move(verticalDelta);
             }
 
-            bool grounded = Probe(out bool onTrampoline, out Transform surface);
+            bool grounded = Probe(out bool onTrampoline, out Transform surface, out Corpse surfaceCorpse);
             ridingSurface = grounded ? surface : null;
             if (ridingSurface != null) ridingSurfaceLastPos = ridingSurface.position;
             float impactVy = motor.Velocity.y;
@@ -235,11 +239,8 @@ namespace NineLives
 
             // Jiggle any corpse we just landed on. (The cat's own squash listens to the jump/land
             // GameEvents itself, so nothing to drive here.)
-            if ((LandedThisStep || HardLandedThisStep || BouncedThisStep) && surface != null)
-            {
-                var corpse = surface.GetComponent<Corpse>();
-                if (corpse != null) corpse.Jiggle();
-            }
+            if ((LandedThisStep || HardLandedThisStep || BouncedThisStep) && surfaceCorpse != null)
+                surfaceCorpse.Jiggle();
             TickFootsteps(dt);
 
             float combinedX = Mathf.Clamp(platformVelX + motor.Velocity.x, -cfg.maxSpeed, cfg.maxSpeed);
@@ -306,10 +307,13 @@ namespace NineLives
 
         /// Ridable surface can be a MovingPlatform directly underfoot, or a Corpse standing on
         /// one (chains through Corpse's own ridingSurface the same way stacked corpses do).
-        bool Probe(out bool onTrampoline, out Transform surface)
+        /// `surfaceCorpse` is reported separately because a settled corpse parents itself onto its
+        /// carrier, so the ride target can be the platform while the thing we landed on is the body.
+        bool Probe(out bool onTrampoline, out Transform surface, out Corpse surfaceCorpse)
         {
             onTrampoline = false;
             surface = null;
+            surfaceCorpse = null;
             float r = cfg.playerRadius * 0.92f;
             Vector3 origin = transform.position + Vector3.up * (cfg.playerRadius + 0.02f);
             float dist = cfg.playerRadius + cfg.groundProbeDepth;
@@ -323,6 +327,7 @@ namespace NineLives
                 grounded = true;
                 var corpse = h.collider.GetComponentInParent<Corpse>();
                 if (corpse != null && corpse.Kind == CorpseKind.Trampoline) onTrampoline = true;
+                if (surfaceCorpse == null) surfaceCorpse = corpse;
                 if (surface == null)
                 {
                     var platform = h.collider.GetComponentInParent<MovingPlatform>();

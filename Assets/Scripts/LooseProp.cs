@@ -5,7 +5,7 @@ namespace NineLives
     /// Cosmetic only: a prop sitting loose inside a hanging object — the bones and skull rattling
     /// around in the swinging cage. It has no physics and no collider of its own; it just listens
     /// for the impacts the cage already reports, jolts, and springs back to its authored pose.
-    public class LooseProp : MonoBehaviour
+    public class LooseProp : MonoBehaviour, ILevelResettable
     {
         [Tooltip("The hanging object this rides inside. Left empty, it finds the nearest one above it.")]
         public HangingPhysicsObject ridesIn;
@@ -25,12 +25,25 @@ namespace NineLives
         Vector2 offset, offsetVel;
         float angle, angleVel;
         bool settled = true;
+        bool awoke;
 
         void Awake()
         {
             if (ridesIn == null) ridesIn = GetComponentInParent<HangingPhysicsObject>();
             restPos = transform.localPosition;
             restAngle = transform.localEulerAngles.z;
+            awoke = true;
+        }
+
+        /// Snap back to the authored pose so a restart doesn't come back mid-rattle.
+        public void ResetToInitial()
+        {
+            if (!awoke) return; // never activated, so restPos hasn't been read yet
+            offset = Vector2.zero; offsetVel = Vector2.zero;
+            angle = 0f; angleVel = 0f;
+            settled = true;
+            transform.localPosition = restPos;
+            transform.localEulerAngles = new Vector3(0f, 0f, restAngle);
         }
 
         void OnEnable() { if (ridesIn != null) ridesIn.Impacted += Jolt; }

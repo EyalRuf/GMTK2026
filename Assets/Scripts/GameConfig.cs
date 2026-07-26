@@ -94,7 +94,9 @@ namespace NineLives
         public float respawnGrace = 0.35f;
         [Tooltip("TEST SETTING: respawn just left of where you died instead of back at the level entry.")]
         public bool respawnAtDeathSpot = false;
-        [Tooltip("Horizontal distance left of the death spot to respawn at, when respawnAtDeathSpot is on.")]
+        [Tooltip("Vertical distance above the death spot to respawn at (lands you on top of your own corpse), when respawnAtDeathSpot is on. Used whenever the capsule fits there.")]
+        public float respawnOffsetY = 1.4f;
+        [Tooltip("Horizontal distance left of the death spot to respawn at, when respawnAtDeathSpot is on and there's no room above.")]
         public float respawnOffsetX = 1.5f;
         [Tooltip("TEST SETTING: when a soul expires from the timer running out, spawn a corpse automatically like a manual sacrifice. When off, timed-out souls respawn with no corpse — corpses only appear from manual sacrifice.")]
         public bool isTimedCorpseSpawn = true;
