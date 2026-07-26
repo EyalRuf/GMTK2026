@@ -1384,6 +1384,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Parallax
       objectReference: {fileID: 0}
+    - target: {fileID: 1331591507775656146, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 1331591507775656146, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 33.9675
+      objectReference: {fileID: 0}
+    - target: {fileID: 1331591507775656146, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1331591507775656146, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 7.85881
+      objectReference: {fileID: 0}
+    - target: {fileID: 1331591507775656146, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.895347
+      objectReference: {fileID: 0}
     - target: {fileID: 2003489687755106610, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.009683385
