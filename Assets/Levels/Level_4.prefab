@@ -62,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.LevelRoot
   levelName: LEVEL NAME
   hint: HINT
-  timer: 9
+  timer: 5
   entry: {fileID: 1183172895667510906}
   exit: {fileID: 3930470954147488828}
 --- !u!1 &2350271588929788269

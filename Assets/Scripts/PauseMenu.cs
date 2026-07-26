@@ -174,7 +174,7 @@ namespace NineLives
 
                 bool reachable = i <= unlocked || config.unlockAllLevelsForTesting;
                 levelButtons[i].interactable = reachable;
-                levelButtonTexts[i].text = $"LEVEL {i + 1} — {levels[i].levelName}";
+                levelButtonTexts[i].text = $"LEVEL {levels.Count - i}";
                 levelButtonTexts[i].color = reachable ? Color.white : new Color(1, 1, 1, 0.35f);
             }
         }

@@ -1115,7 +1115,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.LevelRoot
   levelName: LEVEL NAME
   hint: HINT
-  timer: 9
+  timer: 5
   entry: {fileID: 5957926956673626918}
   exit: {fileID: 6201555121478522019}
 --- !u!1001 &4153606038577703
@@ -1441,6 +1441,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2941302546277428253, guid: 67e310f71f2bc6c43955f2b18abb8db9, type: 3}
+      propertyPath: m_SortingLayer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 3120241192590634268, guid: 67e310f71f2bc6c43955f2b18abb8db9, type: 3}
       propertyPath: m_Size.y
       value: 0.78746927
@@ -1571,6 +1575,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5024407925759372027}
     m_Modifications:
+    - target: {fileID: 2522684203174199907, guid: 0b47b6c62e328a145a769f75ff7275d3, type: 3}
+      propertyPath: m_SortingLayer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5184577098242459823, guid: 0b47b6c62e328a145a769f75ff7275d3, type: 3}
+      propertyPath: m_SortingLayer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 7605447272706478940, guid: 0b47b6c62e328a145a769f75ff7275d3, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.25

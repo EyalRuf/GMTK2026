@@ -928,7 +928,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.LevelRoot
   levelName: LEVEL NAME
   hint: HINT
-  timer: 9
+  timer: 5
   entry: {fileID: 5719206127436630614}
   exit: {fileID: 6317630035996471688}
 --- !u!1 &7766684198437929767
@@ -2572,6 +2572,18 @@ PrefabInstance:
     - target: {fileID: 3804398639057514322, guid: 0fe192b8d5e248d4a9b689aadce688ad, type: 3}
       propertyPath: m_fontSize
       value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 3804398639057514322, guid: 0fe192b8d5e248d4a9b689aadce688ad, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 25d50353bed52f245b68857046270427, type: 2}
+    - target: {fileID: 3804398639057514322, guid: 0fe192b8d5e248d4a9b689aadce688ad, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 9144369859646639266, guid: 25d50353bed52f245b68857046270427, type: 2}
+    - target: {fileID: 3804398639057514322, guid: 0fe192b8d5e248d4a9b689aadce688ad, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4135663547498499790, guid: 0fe192b8d5e248d4a9b689aadce688ad, type: 3}
       propertyPath: m_Name
