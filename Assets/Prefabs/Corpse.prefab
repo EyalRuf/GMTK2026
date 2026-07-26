@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1549542004031891553}
   - component: {fileID: 3097100092637382806}
   - component: {fileID: 1929454491925504698}
+  - component: {fileID: 5891627456439631627}
   m_Layer: 0
   m_Name: Corpse
   m_TagString: Untagged
@@ -160,6 +161,32 @@ MonoBehaviour:
   normalSettledMat: {fileID: 2100000, guid: 84f915846d7c7d54880682935860ef62, type: 2}
   trampolineMat: {fileID: 2100000, guid: f74b7e8f3579c484fa0365666c8d3ad3, type: 2}
   trampolineSettledMat: {fileID: 2100000, guid: 50bdd8c368762e84da8a7cfa18deb10e, type: 2}
+  bobKick: 4
+  bobStiffness: 180
+  bobDamping: 12
+  bobMaxDepth: 0.12
+--- !u!114 &5891627456439631627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 536343842983569136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70a283e3f097a474c9cd441fd06603e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NineLives.BlobShadow
+  shadowRadius: 0.84
+  ellipseSquash: 0.1
+  softness: 0.669
+  shadowColor: {r: 0.23018861, g: 0.08846642, b: 0.088166565, a: 0.7882353}
+  horizontalOffset: -0.37
+  verticalOffset: 0.09
+  maxHeight: 5
+  groundSearchDistance: 50
+  sortingOrder: 10
+  sortingLayerName: Player
 --- !u!1 &887441186567605975
 GameObject:
   m_ObjectHideFlags: 0
@@ -5261,7 +5288,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1256883075159166825, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: jiggleKick
-      value: -5
+      value: -2.5
       objectReference: {fileID: 0}
     - target: {fileID: 1416099463859568304, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: m_SortingLayer
@@ -5281,15 +5308,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1794066411311405035, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.19047621
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1794066411311405035, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.16666666
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1794066411311405035, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.16666666
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1794066411311405035, guid: 253e2d266fed3e14bb75062e694916f6, type: 3}
       propertyPath: m_LocalPosition.x

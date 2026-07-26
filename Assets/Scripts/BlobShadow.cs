@@ -89,10 +89,29 @@ namespace NineLives
             sr.enabled = true;
             float t = 1f - height / maxHeight;           // 1 grounded -> 0 at maxHeight
 
+            // Offset toward the way the cat is facing, so it flips with the character.
+            float centerX = feet.x + horizontalOffset * PlayerController.LastFacingSign;
+            float scaleX = t;
+
+            // Keep the shadow inside the surface it's cast on — no shadow hanging over an edge.
+            float halfW = shadowRadius * scaleX;
+            Bounds b = hit.collider.bounds;
+            if (2f * halfW > b.size.x)
+            {
+                // Platform narrower than the shadow: shrink to fit and center on it.
+                scaleX *= b.size.x / (2f * halfW);
+                halfW = shadowRadius * scaleX;
+                centerX = Mathf.Clamp(centerX, b.min.x + halfW, b.max.x - halfW);
+            }
+            else
+            {
+                centerX = Mathf.Clamp(centerX, b.min.x + halfW, b.max.x - halfW);
+            }
+
             // Sit on the ground, nudged toward the camera (-Z) to avoid z-fighting.
-            shadow.position = new Vector3(feet.x + horizontalOffset, hit.point.y + verticalOffset, feet.z - 0.05f);
+            shadow.position = new Vector3(centerX, hit.point.y + verticalOffset, feet.z - 0.05f);
             shadow.localRotation = Quaternion.identity;
-            shadow.localScale = new Vector3(t, t * ellipseSquash, 1f);
+            shadow.localScale = new Vector3(scaleX, t * ellipseSquash, 1f);
 
             Color c = shadowColor;
             c.a = shadowColor.a * t;

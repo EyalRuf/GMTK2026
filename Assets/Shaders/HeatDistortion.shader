@@ -65,7 +65,7 @@ Shader "Custom/URP/HeatDistortion"
 
             float4 frag (Varyings i) : SV_Target
             {
-                float2 noiseUV = i.uv * _Tiling + float2(_Time.y * _Speed, 0);
+                float2 noiseUV = i.uv * _Tiling + float2(0, _Time.y * _Speed);
                 float2 noise = SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, noiseUV).rg * 2 - 1;
 
                 float2 offset = noise * _Strength;
