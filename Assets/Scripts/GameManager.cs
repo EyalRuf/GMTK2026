@@ -51,6 +51,7 @@ namespace NineLives
         bool paused;
 
         UpgradeType pendingUpgrade = UpgradeType.None;
+        CatTint playerTint;
 
         bool timerStarted;
         float graceLeft;
@@ -105,6 +106,7 @@ namespace NineLives
             player.Configure(config);
             cam.Configure(config, player);
 
+            playerTint = player.GetComponentInChildren<CatTint>(true);
             corpseCarry = player.GetComponent<CorpseCarry>();
             corpseCarry.Configure(config, player, cam.GetComponent<Camera>());
             player.DeathSequenceReady += OnTrapDeathReady;
@@ -166,6 +168,7 @@ namespace NineLives
             pendingUpgrade = UpgradeType.None;
             corpseCarry.SetEnabled(false);
             player.JumpMultiplier = 1f;
+            ApplyPlayerTint(UpgradeType.None);
 
             hud.SetLevel(levelInstance.levelName, i + 1, levels.Count);
             hud.SetLives(livesLeft, config.livesPerLevel);
@@ -441,6 +444,7 @@ namespace NineLives
             pendingUpgrade = UpgradeType.None;
             corpseCarry.SetEnabled(false);
             player.JumpMultiplier = 1f;
+            ApplyPlayerTint(UpgradeType.None);
             EnterState(State.Dying, 0.45f);
         }
 
@@ -449,6 +453,15 @@ namespace NineLives
             pendingUpgrade = upgrade;
             corpseCarry.SetEnabled(upgrade == UpgradeType.Carry);
             player.JumpMultiplier = upgrade == UpgradeType.Trampoline ? config.trampolinePlayerJumpMultiplier : 1f;
+            ApplyPlayerTint(upgrade);
+        }
+
+        /// Trampoline-armed cats read green; everything else is the plain cat.
+        void ApplyPlayerTint(UpgradeType upgrade)
+        {
+            if (playerTint == null) return;
+            playerTint.gameplayTint = config.trampolineTint;
+            playerTint.gameplayStrength = upgrade == UpgradeType.Trampoline ? config.trampolineTintStrength : 0f;
         }
 
         void OnExitReached()
