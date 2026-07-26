@@ -1,6 +1,6 @@
 # STATE.md — current state of the game
 
-**Last updated:** 2026-07-23
+**Last updated:** 2026-07-25
 
 ## Core loop
 
@@ -8,15 +8,48 @@ Side-scrolling puzzle platformer. Play a cat with 9 lives; get from entry (A) to
 exit (B). Each life has a death countdown; at 0 (or press Q to sacrifice) the cat dies and
 leaves a **corpse** — a physics box. Corpses hold pressure plates and act as platforms.
 Respawn is at the entry; corpses persist. Run out of 9 lives → the level resets (corpses cleared).
-8 levels play back-to-back (`Level_1` … `Level_8_Springboard`).
+Levels play back-to-back; `Assets/Levels/` currently holds `Level_1` … `Level_5`.
 
 ## What works right now
 
-- **Movement** — `PlatformerMotor` (plain C#): accel/decel, coyote time, jump buffer, variable
-  jump height, snappy fall gravity. Driven by `PlayerController` (CharacterController, in Update).
+- **Movement** — `PlatformerMotor` (plain C#): accel/decel, coyote time, jump buffer, snappy fall
+  gravity. Driven by `PlayerController` (CharacterController, in Update).
+  **Jump is always charge-and-release**, moving or not: press starts the charge, release fires it,
+  height lerps `baseJumpHeight`→`jumpHeight` over `jumpHoldTime`. A tap shorter than
+  `quickJumpMaxHold` is the quick jump (base height, `QuickJump` anim); longer counts as charged
+  (`JumpRelease` anim). While charging you plant your feet, but only after a `chargeGraceTime`
+  window where you still move at `chargeGraceSpeedMultiplier`, then coast down at
+  `chargePlantDeceleration`. `Charging` is true any time jump is held on the ground, so the
+  `ChargingJump` animator state plays from Idle *and* from Movement.
 - **Death countdown** — `LifeTimer`; per-level duration, resets each life, tick SFX under 3s.
 - **Corpses** — `Corpse.cs`: physics box, freezes to a solid platform after settling. **Normal
   corpses are no longer bouncy** — just a solid climbable platform (the base, power-less case).
+  - **Settling on something that moves parents the corpse to it** (`Attach`/`Detach`): a
+    `MovingPlatform`, a `LinkedMover` gate/lift, a `HangingPhysicsObject` cage, or a corpse that is
+    itself attached — so stacks chain and the whole pile rides along. It inherits the carrier's
+    tilt. **This is a transform relationship only — a corpse must have zero physics influence on
+    what it rides** (user's explicit call, and the reason two fancier attempts were thrown away):
+    - `Physics.IgnoreCollision` drops contact between the corpse and every non-kinematic rigidbody
+      up its carrier chain. A settled corpse is kinematic = infinitely heavy, so contact with a
+      hanging cage can only resolve by shoving the cage — a corpse sitting on it would kick it
+      around forever, much worse once the player touched it. Glued on by the hierarchy, that
+      contact has nothing left to solve, so it's dropped. Restored on `Detach`.
+    - `LateUpdate` **re-asserts `attachLocalPos`/`attachLocalRot` every frame.** A rigidbody's
+      transform can still be written from its own (stale) physics pose, which under a carrier that
+      physics itself moves cancels the hierarchy's motion out. Re-asserting makes the attachment
+      rigid no matter what else wrote the transform. The landing bob then goes on top as a world-Y
+      offset with `bobApplied` zeroed (the base pose is re-established every frame, nothing to undo).
+    - **Do not** try a `FixedJoint` weld instead: mass-6 corpse + the cage's 33-unit hinge with
+      `enablePreprocessing = false` is an unstable joint chain, and it was dramatically worse.
+  - Settle detection measures velocity **relative to a physics-driven carrier**
+    (`carrierBody.GetPointVelocity`) — on a swinging cage an absolute test never reaches rest, so
+    the corpse would never settle and never attach. Transform-driven carriers (platform/lift) are
+    still hand-carried by position delta until they attach, and there velocity ≈ 0 already.
+  - **Cleanup must go through `GameManager.ReturnToPoolRoot`** (called from `ClearCorpses` and
+    `GetPooledCorpse`): a parented corpse lives inside the level hierarchy, so disabling a level
+    would deactivate it while `activeSelf` stayed true — the pool would treat it as in-use and leak
+    one corpse per level switch. `Detach()` also drops anything attached on top, and restores the
+    authored localScale/rotation. `PickUp()` detaches.
 - **Upgrade pickups** — one-time trigger pickups (`UpgradePickup.cs`, prefabs
   `Assets/Prefabs/Upgrade_Trampoline.prefab` / `Upgrade_Carry.prefab`, not yet placed in any
   level — drag into a level prefab to use) that arm an effect for the player's *current life
@@ -38,8 +71,10 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   `plates` dragged in it moves continuously forever; with plates linked it only moves while any
   is pressed (freezes in place otherwise) — same start/stop puzzle idea as `LinkedMover`, but
   looping instead of open/close. `PlayerController` rides it by tracking the platform's position
-  delta each frame while grounded on it (works for horizontal and vertical travel); corpses are
-  **not** carried by it yet. Prefab: `Assets/Prefabs/MovingPlatform.prefab` (orange, default
+  delta each frame while grounded on it (works for horizontal and vertical travel); corpses ride it
+  by delta until they settle, then parent to it (see Corpses). `PlayerController.Probe` now reports
+  the corpse it landed on separately from the ride target, since an attached corpse's
+  `GetComponentInParent<MovingPlatform>` resolves to the platform. Prefab: `Assets/Prefabs/MovingPlatform.prefab` (orange, default
   scale 3×0.5×3, default path +4 on X) — drag into a level like any other block, tweak
   `moveOffset`/`speed`/`waitTime`/`plates` in the Inspector.
 - **Levels are hand-editable in the Unity Editor**, not code. Each level is a **prefab**
@@ -89,6 +124,65 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   - Animator: new `Hit` trigger + `HitReaction` state (placeholder empty clip, same pattern as the
     other 14 states) on `AnyState`; interrupts into `DeathRespawn` on `Die`, or exit-times back to
     `Idle1` if `Die` never comes.
+- **Hanging physics** — `HangingPhysicsObject.cs` + `RopeVisual.cs`. A Rigidbody + HingeJoint
+  pendulum in the XY plane. Prefabs: `HangingPhysicsTrap.prefab` (single-chain wrecking ball, in
+  Level_4) and `HangingPhysicsPlatform.prefab` (two-chain cage, in Levels 5/6/7).
+  - **Chain height is `ropeLength` on `HangingPhysicsObject`, per instance.** The platform prefab
+    ships at 33.4 — a ceiling well off the top of the screen. Type a new number on any instance and
+    `OnValidate` slides `mount` (the field naming the prefab's `Mount`, which parents all three
+    anchors), re-authors the `HingeJoint`, and the ropes redraw live in the Scene view. The platform
+    itself never moves, so retuning a level's chain height can't shift its layout. **Edit-time
+    only** — deliberately not applied in `Awake`, because `LinkedMover` caches the mount's start
+    position in *its* Awake and the order isn't guaranteed. Don't drag `Mount` by hand; the next
+    Inspector touch snaps it back to `ropeLength`.
+  - Longer pendulum = slower, wider swing for the same bump, so `maxSwingAngleDeg` is 7 (not 30) at
+    33.4 — that preserves the ±4u maximum horizontal reach the old short rope had. Scale it with
+    `ropeLength` if you change the height a lot.
+  - **`RopeVisual.links` / `linkWorldLength`** — when `links` is set (the platform's `RopeMesh`), the
+    chain-link sprites hold a constant world size and only as many as fit are shown, so a long rope
+    tiles instead of smearing 4 stretched links over it. 32 links are pre-placed per rope (clean up
+    to ~62u); past that they stretch to fill. Leave `links` empty for plain stretch-to-fit — the
+    trap still does that.
+  - **`hangAnchor` is the only source of truth for the pivot.** `Awake()` overwrites the
+    `HingeJoint`'s `anchor`/`connectedAnchor` from it, and `ropeLength` is read *only* when
+    `hangAnchor` is null. Authoring either one in the Inspector used to be silently discarded —
+    the Scene view drew one pivot while the game swung around another. Both cases now log a
+    warning naming what won. **To change the rope length, move the anchor transform.**
+  - **Level reset restores the whole body** (`ResetToInitial`, `ILevelResettable`): authored
+    position/rotation, zeroed linear + angular velocity, joint pivot re-derived from `hangAnchor`
+    (`connectedAnchor` is a world point that otherwise only `FixedUpdate` refreshes), swing-amplitude
+    tracking cleared, and the `Kickstart` impulse re-applied — skipped on the level's first entry,
+    where `Awake` already did it. Needed because levels are only enabled/disabled now, and a
+    rigidbody keeps its pose *and* its velocity across that. `LooseProp` snaps back the same way.
+  - **Idle sway** (`idleSway` / `idleSwayAngle` / `idleSwayResponse`) — keeps an object gently
+    swinging forever instead of settling into a dead pose. Measures the amplitude of each
+    half-swing and, while it's under target, pumps torque along the current direction of travel,
+    so the drive matches the pendulum's own rhythm rather than shoving it on a timer. Torque is
+    auto-scaled by inertia-about-the-hinge × natural frequency, so the Inspector number means the
+    same thing on any object. Knocked wider than the target, the drive shuts off and `swingDamping`
+    brings it back down. On for the Level_4 trap (10°), off for the cage.
+  - **Rope art must live between the pivot and the object.** `RopeVisual` sits at the anchor,
+    rotates toward the target and scales Y to the distance — so anything above the pivot swings
+    *backwards*, and hand-tiled chain segments stretch instead of adding links. One `RopeVisual`
+    per chain: the cage has `Rope_L`/`Rope_R`, each with its own `HangAnchor_L/R` and a
+    `ChainAttach_L/R` on the cage, 4 links tiling the span exactly. Anything offset sideways from
+    its rope's own pivot will sweep an arc at the top.
+  - Player contact goes through `PlayerController.OnControllerColliderHit` → `ApplyImpact`; the
+    cage is stood on via the existing `surface` platform-riding path. A corpse settling on the cage
+    parents to it and stops colliding with it (see Corpses), so it never pushes the swing; landing on
+    *that* corpse imparts no impulse either, since `OnControllerColliderHit` only forwards hits whose
+    own rigidbody is the cage. `ApplyImpact` also raises
+    `Impacted(impulseMagnitude)` — the hook cosmetic listeners use instead of sniffing physics.
+  - **`LooseProp.cs`** — props rattling inside a hanging object (the `Bone` and `Skull` in the
+    Level_5 cage, where it's already attached). No physics, no collider: it subscribes to
+    `Impacted`, kicks a spring-damper on local position + Z rotation sized so the first swing peaks
+    at `shakeDistance`, then settles back to the pose it read at `Awake` and stops updating. Rest
+    pose is read live, so per-level position overrides are respected. Strength scales with impulse
+    against `fullJoltImpulse`. Fires on contact only, not while the cage swings freely. Tuned per
+    prop so they don't move in lockstep (bone looser/faster than skull).
+  - **Not playtested in Play mode.** Level_5's cage now hangs on an 8.40 rope (was 3.81), so its
+    swing period is ~5.8s and it travels ±4.2 units at `maxSwingAngleDeg` 30 — drop that to ~13.6
+    if it sweeps too far.
 - **Lava waterfall** — `LavaWaterfall.cs` (`ExecuteAlways`) + `Assets/Prefabs/LavaWaterfall.prefab`.
   Drag the prefab into a level; the root raycasts down (`hitMask`/`castRadius`/`maxLength`) and
   stretches the `Stream` quad to the hit distance, feeding the world length into the shader via a
@@ -99,6 +193,16 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   point (`NineLives/LavaSplash` additive sprite shader / `Mat_LavaSplash`) and disables itself when
   nothing is hit. Angle a fall by rotating the root; set `updateInterval` >0 or leave 0 for
   per-frame recast (moving floors). Not yet placed in any level or playtested in Play mode.
+- **In-world hints** — `PlayerMessage.cs` on the Player prefab's `LevelMsg` child (world-space
+  Canvas + TMP + CanvasGroup, local offset `(0, 1.15, -1.5)`, scale 0.005 so 400×100px = 2×0.5
+  world units; negative Z keeps it in front of level geometry). Shows a line above the cat's head,
+  pulsing alpha between `minAlpha`/`maxAlpha` at `flashesPerSecond` under a fade-in/out envelope,
+  for `duration` seconds, plus a small bob. Hidden on `GameEvents.LevelEntered`.
+  Levels supply the text via `MessageTrigger.cs` (`Assets/Prefabs/MessageTrigger.prefab` — box
+  trigger, drag into a level and scale it over the teaching spot): `message` (TextArea),
+  `duration`, `flashesPerSecond` (0 on either = the player's default), `once`. Implements
+  `ILevelResettable` so `once` re-arms on level restart. Draws a yellow gizmo box in the Editor.
+  Not placed in any level yet, not playtested.
 - **HUD** — `HUD.cs`: level label, big timer + bar, lives pips, hint, banners.
 - **Audio** — `ProceduralAudio.cs`: all SFX generated in code (jump/bounce/death/plate/win/etc).
   Background music now works: `GameManager.musicSource` (public `AudioSource` field, assigned +
@@ -114,7 +218,8 @@ Respawn is at the entry; corpses persist. Run out of 9 lives → the level reset
   Level switching = disable all, enable the target, reset it. `StartLevel` walks the level's
   `GetComponentsInChildren<ILevelResettable>(true)` and calls `ResetToInitial()`.
   - **`ILevelResettable`** (`ILevelResettable.cs`) — implemented by `MovingPlatform`,
-    `LinkedMover`, `PressurePlate`, `UpgradePickup`, `LevelExit`. Restores each back to its
+    `LinkedMover`, `PressurePlate`, `UpgradePickup`, `LevelExit`, `HangingPhysicsObject`,
+    `LooseProp`. Restores each back to its
     `Awake`-captured authored state (position, closed gate, released plate, un-taken pickup,
     un-triggered exit) — the reset Destroy/Instantiate used to give for free.
   - **Corpses are pooled** under `Corpses`: `GameManager.GetPooledCorpse()` reuses a disabled one
@@ -155,6 +260,41 @@ presentation layer *listens*.
   player is invisible during death; FXManager (always active) still plays the death VFX/SFX. To
   play a death animation on the player later, raise the death event before deactivating.
 - **Not yet playtested in Play mode** — compiles clean, all refs verified wired via CLI.
+
+## Level-to-level transition
+
+Reaching the exit no longer hard-cuts. `GameManager.ExitSequence()` (coroutine) runs:
+cat `LevelExit` anim + pad anim + win SFX → `levelExitAnimTime` → diagonal wipe covers →
+next level swapped in behind black → `wipeBlackHoldTime` → wipe reveals → cat `LevelEntry`
+anim → `levelEntryAnimTime` → input back. All five durations are in `GameConfig`
+under **Level Transition**.
+
+- **`ScreenWipe.cs` + `Assets/Prefabs/ScreenWipe.prefab`** (scene root `ScreenWipe`, wired to
+  `GameManager.wipe`). One oversized black `Image` rotated `angle`° on Z — the tilt *is* the
+  diagonal edge, no shader or mask. It always sweeps the same direction (enters right to cover,
+  exits left to reveal) so cover+reveal reads as one continuous slide. Sizes itself from the
+  canvas rect at runtime (`ConstantPixelSize`, re-measured on resize), unscaled time,
+  `sortingOrder 500` so it's over HUD and menu. Drop a torn-edge sprite on the `Panel` Image
+  in the art pass; nothing in the code changes.
+- **`transitioning` flag** — while a transition runs, `GameManager.Update` returns immediately:
+  no pause, no restart, no debug level-jump, no camera pan (any of those mid-wipe would strand
+  a black panel). The coroutine ticks the player itself with zero input, so gravity/animation
+  keep running while control is dead. `StartLevel` force-clears the wipe when called *outside*
+  a transition (restart / game over / debug keys), so it can't get stuck.
+- **Level 0 has no entry beat** — it's first in the stack, there's nothing to transition from.
+  `EnterLevelSequence(0)` skips the reveal + entry animation entirely; menu → Level_0 is still
+  a straight cut. *Completing* Level_0 plays the full exit sequence like any other level.
+  Menu / Level Select → any other level starts already covered and reveals in.
+- **`BeginLife` holds back `LevelEntered`** when `deferEntryEvent` is set (transition only);
+  ordinary respawns raise it immediately as before.
+- **ExitPad animator** — `Assets/Animations/ExitPadAnimator.controller`: `Idle` (default) →
+  `Exit` on a `Play` trigger from AnyState, exit-times back to `Idle`. Both hold empty
+  placeholder clips (`Anim_ExitPad_Idle/Exit`, same key-a-nonexistent-child trick as the player
+  clips). The `Animator` is on the `ExitPad.prefab` **root**; `LevelExit.padAnimator` points at
+  it and fires `Play` on contact, and `ResetToInitial()` snaps back to `Idle` (a same-level
+  restart doesn't disable the object, so it'd otherwise stay in the reached pose).
+- **Not playtested in Play mode.** Compiles clean, all 8 in-scene ExitPads verified resolving
+  to their own animator + controller via CLI.
 
 ## Everything visualized is now a prefab/material asset (drag-and-drop art later)
 
@@ -246,6 +386,20 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 - **Never delete `.cs`/`.meta` files directly on disk (`rm`) while the Editor is open** — it
   crashed the Editor process outright once, mid-reimport. Prefer `AssetDatabase.DeleteAsset`
   via `eval_file`, or accept the Editor needs a manual reopen after.
+- **Levels are nested prefabs — edit `Assets/Levels/Level_N.prefab`, not the scene objects.**
+  `Game.unity` holds each level as a *prefab instance*, so per-level overrides (moved children,
+  added GameObjects, tweaked component values) are stored inside the level prefab. Writing to the
+  matching objects in the open scene appears to succeed and then silently loses to those stored
+  overrides — the values read back unchanged. Cost two full rounds of "the fix didn't take" on the
+  Level_5 cage. `PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(go)` tells you which asset
+  actually owns an object.
+- Across that nesting, `PrefabUtility.IsAddedGameObjectOverride` returns false and
+  `RevertObjectOverride` silently does nothing. What works: `GetCorrespondingObjectFromSource(go)
+  == null` to detect instance-added objects, and assigning the source object's values directly
+  instead of trusting the revert API.
+- `[ExecuteAlways]` components that write transforms (`RopeVisual`, `LavaWaterfall`) bake instance
+  overrides into whatever prefab owns the object just by the Editor ticking. Expect stale
+  overrides to reappear; don't assume an authored value is the one in play.
 - Building prefabs via `eval_file` + `SerializedObject`/`PrefabUtility.SaveAsPrefabAsset` is much
   faster than one MCP tool call per GameObject/component — write one script per prefab, wire
   `[SerializeField]` fields by name with `SerializedObject.FindProperty(...).objectReferenceValue`,
@@ -265,7 +419,10 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 | `Assets/Scripts/LevelRoot.cs` | Marks a level's root; entry/exit/timer/name/hint. |
 | `Assets/Scripts/Corpse.cs` / `PressurePlate.cs` / `LinkedMover.cs` / `MovingPlatform.cs` | The mechanics. |
 | `Assets/Scripts/DeathTrap.cs` / `DeathInfo.cs` | Generic instant-kill hazard component; drop-on knockback/hit-reaction config. |
+| `Assets/Scripts/HangingPhysicsObject.cs` / `RopeVisual.cs` / `LooseProp.cs` | Hinge pendulum (cage, wrecking ball), its chain visual, and props rattling inside it. Pivot = `hangAnchor`. |
+| `Assets/Scripts/PlayerMessage.cs` / `MessageTrigger.cs` | Flashing hint above the cat's head; level-placed trigger volumes supply the text. |
 | `Assets/Scripts/ParallaxLayer.cs` | Reusable per-layer parallax; `ParallaxLayer.prefab` + a `Parallax` group in every level. |
+| `Assets/Scripts/ScreenWipe.cs` | Diagonal cut to black between levels; `ScreenWipe.prefab` + scene root, driven by `GameManager.ExitSequence`. |
 | `Assets/Scripts/GameEvents.cs` | Static event hub: gameplay↔FX/animation decoupling boundary. |
 | `Assets/Scripts/FXManager.cs` / `OneShotVFX.cs` | Event→VFX+SFX; pooled placeholder particles. |
 | `Assets/Scripts/PlayerAnimatorDriver.cs` | Drives `PlayerAnimator.controller` from player state. |

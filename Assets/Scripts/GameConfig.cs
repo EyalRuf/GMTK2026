@@ -22,6 +22,14 @@ namespace NineLives
         public float jumpHeight = 3.5f;
         [Tooltip("How long the player can charge jump (holding, before release) to gain height, in seconds.")]
         public float jumpHoldTime = 1.5f;
+        [Tooltip("Hold shorter than this fires a quick jump: base height, quick-jump animation instead of the charged one.")]
+        public float quickJumpMaxHold = 0.12f;
+        [Tooltip("Grace window at the start of a charge where you keep moving before planting your feet.")]
+        public float chargeGraceTime = 0.25f;
+        [Tooltip("Move speed multiplier during the charge grace window.")]
+        public float chargeGraceSpeedMultiplier = 0.8f;
+        [Tooltip("Deceleration used to coast to a stop once the charge grace window ends.")]
+        public float chargePlantDeceleration = 45f;
         [Tooltip("Seconds from leaving the ground to the top of the arc (at max jump height). Lower = heavier, punchier.")]
         public float timeToApex = 0.4f;
         [Tooltip("Gravity multiplier while falling. >1 makes the fall snappier than the rise.")]
@@ -62,6 +70,10 @@ namespace NineLives
         [Tooltip("Player's own jump velocity multiplier while the Trampoline upgrade is armed this life.")]
         public float trampolinePlayerJumpMultiplier = 1.35f;
 
+        [Header("Powerups")]
+        [Tooltip("Seconds after a powerup pickup (Trampoline upgrade, Rubber body, etc.) is taken before it respawns.")]
+        public float powerupRespawnTime = 10f;
+
         [Header("Corpse Carry Upgrade")]
         [Tooltip("How close to a settled corpse the player must be to pick it up.")]
         public float carryPickupRange = 2.2f;
@@ -82,18 +94,42 @@ namespace NineLives
         public float respawnGrace = 0.35f;
         [Tooltip("TEST SETTING: respawn just left of where you died instead of back at the level entry.")]
         public bool respawnAtDeathSpot = false;
-        [Tooltip("Horizontal distance left of the death spot to respawn at, when respawnAtDeathSpot is on.")]
+        [Tooltip("Vertical distance above the death spot to respawn at (lands you on top of your own corpse), when respawnAtDeathSpot is on. Used whenever the capsule fits there.")]
+        public float respawnOffsetY = 1.4f;
+        [Tooltip("Horizontal distance left of the death spot to respawn at, when respawnAtDeathSpot is on and there's no room above.")]
         public float respawnOffsetX = 1.5f;
         [Tooltip("TEST SETTING: when a soul expires from the timer running out, spawn a corpse automatically like a manual sacrifice. When off, timed-out souls respawn with no corpse — corpses only appear from manual sacrifice.")]
         public bool isTimedCorpseSpawn = true;
         [Tooltip("UI ONLY: show the numeric countdown next to the soul icons. When off, only the draining soul icons indicate remaining time.")]
         public bool showTimerSeconds = true;
+        [Tooltip("UI ONLY: hide the level entry/exit banners, level name, hint text, and button-info UI. Movement unlocks 0.5s after spawning instead of waiting for the banner.")]
+        public bool hideLevelUI = false;
+        [Tooltip("Seconds the cat's death animation plays under the OUT OF LIVES banner before it's hidden (should match Anim_DeathRespawn's length).")]
+        public float gameOverDeathAnimTime = 0.85f;
+
+        [Header("Level Transition")]
+        [Tooltip("Seconds the cat's exit animation + the exit pad's animation play before the screen starts wiping to black.")]
+        public float levelExitAnimTime = 1f;
+        [Tooltip("Seconds the diagonal cut takes to sweep in and cover the screen.")]
+        public float wipeCoverTime = 0.45f;
+        [Tooltip("Seconds held on full black while the next level is swapped in.")]
+        public float wipeBlackHoldTime = 0.15f;
+        [Tooltip("Seconds the diagonal cut takes to sweep off and reveal the new level.")]
+        public float wipeRevealTime = 0.45f;
+        [Tooltip("Seconds the cat's level-entry animation plays after the reveal before input unlocks.")]
+        public float levelEntryAnimTime = 0.6f;
 
         [Header("Camera")]
         public Vector3 cameraOffset = new Vector3(0f, 1.5f, -15f);
         public float cameraSmoothing = 0.16f;
         [Tooltip("How far ahead of the player the camera leans, per unit of speed.")]
         public float cameraLookAhead = 0.25f;
+        [Tooltip("Seconds W/S must be held before the camera starts panning up/down.")]
+        public float cameraLookHoldDelay = 0.6f;
+        [Tooltip("How far the camera pans up/down when looking, in world units.")]
+        public float cameraLookDistance = 2.5f;
+        [Tooltip("How fast the look pan eases toward its target offset.")]
+        public float cameraLookSmoothing = 0.2f;
 
         [Header("Testing")]
         [Tooltip("Level Select in the menus lets you pick any level, ignoring reached progress.")]

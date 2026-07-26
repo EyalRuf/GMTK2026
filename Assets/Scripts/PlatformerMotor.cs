@@ -63,24 +63,24 @@ namespace NineLives
             if (grounded && Velocity.y < 0f) Velocity.y = -2f;
 
             float jumpMult = input.JumpMultiplier <= 0f ? 1f : input.JumpMultiplier;
-            bool wantsMove = Mathf.Abs(input.Move) > 0.01f;
 
-            // Moving when jump is pressed: fire the base jump immediately, no charging.
-            // Stationary: start charging and wait for release to fire.
-            if (input.JumpPressed && (grounded || coyote > 0f))
-            {
-                if (wantsMove)
-                    Fire(0f, jumpMult);
-                else
-                    chargingActive = true;
-            }
+            // Every jump charges, moving or not — release is what fires it. A quick tap releases
+            // with ~no charge, which is the quick jump. Holding the button through a landing picks
+            // the charge up on touchdown; no need to re-press once you're back on the ground.
+            if ((input.JumpPressed && (grounded || coyote > 0f)) || (input.JumpHeld && grounded))
+                chargingActive = true;
 
             bool charging = chargingActive && grounded && input.JumpHeld;
             Charging = charging;
 
-            Velocity.x = charging
-                ? 0f
-                : StepHorizontal(dt, input.Move, grounded, input.SpeedMultiplier);
+            // Charging plants your feet, but not instantly: for chargeGraceTime you keep moving at
+            // a slightly reduced speed, then coast to a stop.
+            if (charging)
+                Velocity.x = chargeElapsed < cfg.chargeGraceTime
+                    ? StepHorizontal(dt, input.Move, grounded, input.SpeedMultiplier * cfg.chargeGraceSpeedMultiplier)
+                    : Mathf.MoveTowards(Velocity.x, 0f, cfg.chargePlantDeceleration * dt);
+            else
+                Velocity.x = StepHorizontal(dt, input.Move, grounded, input.SpeedMultiplier);
 
             // chargeElapsed is cleared explicitly after each Fire() — don't also clear it here,
             // that would race the JumpReleased check below and always yield a 0 charge.
@@ -136,7 +136,7 @@ namespace NineLives
             Grounded = false;
             coyote = 0f;
             JumpedThisStep = true;
-            JumpWasCharged = charge > 0.01f;
+            JumpWasCharged = charge > cfg.quickJumpMaxHold;
         }
 
         float StepHorizontal(float dt, float move, bool grounded, float speedMultiplier)

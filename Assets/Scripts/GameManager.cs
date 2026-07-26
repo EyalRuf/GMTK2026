@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +21,8 @@ namespace NineLives
         public HUD hud;
         [Tooltip("Pre-placed MenuUI object.")]
         public MenuUI menu;
+        [Tooltip("Pre-placed ScreenWipe object: the diagonal cut to black between levels.")]
+        public ScreenWipe wipe;
         [Tooltip("Corpse prefab: pooled at runtime under corpseRoot, never destroyed.")]
         public GameObject corpsePrefab;
         [Tooltip("Empty scene object the corpse pool is parented under.")]
@@ -51,8 +54,11 @@ namespace NineLives
         float soulInterval;
         float nextBoundary;
         bool hasDiedThisLevel;
+        bool transitioning;
+        bool deferEntryEvent;
         Vector3 lastDeathFeet;
         bool lastDeathUnrecoverable;
+        float gameOverDeathLeft;
 
         // Jump/land/death SFX moved to FXManager (event-driven). Bounce/plate/win/fail/tick stay here.
         AudioClip sBounce, sPlate, sWin, sFail, sTick;
@@ -111,6 +117,9 @@ namespace NineLives
 
         void StartLevel(int i)
         {
+            // Restart / game over / the debug level keys all land here mid-nowhere; make sure no
+            // wipe is left covering the screen. Inside a transition the cover is deliberate.
+            if (!transitioning && wipe != null) wipe.Clear();
             levelIndex = i;
             SaveData.HighestUnlockedLevel = Mathf.Max(SaveData.HighestUnlockedLevel, i);
             if (corpseCarry != null) corpseCarry.DropHeld();
@@ -125,6 +134,10 @@ namespace NineLives
             levelInstance = levels[i];
             levelInstanceGo = levelInstance.gameObject;
 
+            var bounds = levelInstanceGo.GetComponentInChildren<CameraBounds>(true);
+            if (bounds == null) Debug.LogError($"Level '{levelInstance.name}' has no CameraBounds in its children.");
+            cam.SetBounds(bounds);
+
             // Wipe every persisting level object back to its authored state (platforms,
             // gates, plates, pickups, exit) — the reset that Destroy/Instantiate used to give
             // for free.
@@ -136,7 +149,9 @@ namespace NineLives
             else Debug.LogError($"Level '{levelInstance.name}' has no LevelExit in its children.");
 
             foreach (var pickup in levelInstanceGo.GetComponentsInChildren<UpgradePickup>(true))
-                pickup.Init(OnUpgradePickedUp);
+                pickup.Init(config, OnUpgradePickedUp);
+            foreach (var pickup in levelInstanceGo.GetComponentsInChildren<RubberPickup>(true))
+                pickup.Init(config);
             pendingUpgrade = UpgradeType.None;
             corpseCarry.SetEnabled(false);
             player.JumpMultiplier = 1f;
@@ -144,6 +159,7 @@ namespace NineLives
             hud.SetLevel(levelInstance.levelName, i + 1, levels.Count);
             hud.SetLives(livesLeft, config.livesPerLevel);
             hud.SetHint(levelInstance.hint);
+            hud.SetChromeVisible(!config.hideLevelUI);
 
             soulInterval = levelInstance.timer;
             float totalDuration = soulInterval * config.livesPerLevel;
@@ -155,18 +171,33 @@ namespace NineLives
             hud.SetTimer(timer.Remaining, timer.Normalized);
             hud.SetSouls(timer.Remaining, soulInterval);
 
-            BeginLife();
-            EnterState(State.Intro, 1.9f);
-            hud.Banner($"LEVEL {i + 1}", levelInstance.levelName, GreyboxFactory.Exit);
+            BeginLife(isNewLevelEntry: true);
+            EnterState(State.Intro, config.hideLevelUI ? 0.5f : 1.9f);
+            if (!config.hideLevelUI)
+                hud.Banner($"LEVEL {i + 1}", levelInstance.levelName, GreyboxFactory.Exit);
         }
 
-        void BeginLife()
+        /// isNewLevelEntry distinguishes a genuine level start (StartLevel) from an in-place
+        /// respawn after death (State.Dying): only the former plays the LevelEntry animation. A
+        /// respawn just reactivates the player where its already-pending Die trigger (armed back
+        /// in Die(), before the object was hidden) resumes on its own and plays DeathRespawn.
+        void BeginLife(bool isNewLevelEntry)
         {
             var spawnFeet = levelInstance.EntryFeet;
             if (config.respawnAtDeathSpot && hasDiedThisLevel && !lastDeathUnrecoverable)
-                spawnFeet = ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
+            {
+                // Prefer straight up (on top of the corpse you just left); only step aside to the
+                // left when the capsule doesn't fit there — under a low ceiling or a stacked corpse.
+                Vector3 above = lastDeathFeet + Vector3.up * config.respawnOffsetY;
+                spawnFeet = IsSpawnClear(above)
+                    ? above
+                    : ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
+            }
             player.Spawn(spawnFeet);
-            GameEvents.RaiseLevelEntered(spawnFeet);
+            // During a level transition the entry animation is held back until the wipe has
+            // revealed the new level — EnterLevelSequence raises it. A death respawn never raises
+            // it at all.
+            if (isNewLevelEntry && !deferEntryEvent) GameEvents.RaiseLevelEntered(spawnFeet);
             cam.Snap();
             timerStarted = false;
             graceLeft = config.respawnGrace;
@@ -180,18 +211,29 @@ namespace NineLives
         {
             for (int i = 0; i < 20; i++)
             {
-                Vector3 p0 = feet + Vector3.up * config.playerRadius;
-                Vector3 p1 = feet + Vector3.up * (config.playerHeight - config.playerRadius);
-                if (!Physics.CheckCapsule(p0, p1, config.playerRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore))
-                    return feet;
+                if (IsSpawnClear(feet)) return feet;
                 feet += Vector3.up * 0.5f;
             }
             return feet;
         }
 
+        bool IsSpawnClear(Vector3 feet)
+        {
+            Vector3 p0 = feet + Vector3.up * config.playerRadius;
+            Vector3 p1 = feet + Vector3.up * (config.playerHeight - config.playerRadius);
+            return !Physics.CheckCapsule(p0, p1, config.playerRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore);
+        }
+
         void Update()
         {
             input.Sample();
+
+            // A level transition owns the game entirely while it runs: no pause, no restart, no
+            // debug level jumping, no camera panning — any of those mid-wipe strands a black
+            // panel over the screen. The transition coroutine ticks the player itself.
+            if (transitioning) return;
+
+            if (cam != null) cam.SetLookInput(input.LookUpHeld, input.LookDownHeld);
 
             if (state == State.MainMenu) return;
 
@@ -219,8 +261,8 @@ namespace NineLives
             switch (state)
             {
                 case State.Intro:
-                    // player can already move during intro; countdown not yet running
-                    TickPlayer(dt, allowDeath: false);
+                    // controls locked until the level banner clears; countdown not yet running
+                    TickPlayer(dt, allowDeath: false, allowInput: false);
                     if (stateTimer <= 0f) { hud.HideBanner(); state = State.Playing; }
                     break;
 
@@ -233,19 +275,17 @@ namespace NineLives
                     if (stateTimer <= 0f)
                     {
                         if (livesLeft <= 0) EnterGameOver();
-                        else { BeginLife(); state = State.Playing; }
+                        else { BeginLife(isNewLevelEntry: false); state = State.Playing; }
                     }
                     break;
 
+                // LevelClear is driven entirely by ExitSequence (which runs with `transitioning`
+                // set, so this switch isn't reached); the state is just a re-entry guard.
                 case State.LevelClear:
-                    if (stateTimer <= 0f)
-                    {
-                        if (levelIndex + 1 < levels.Count) StartLevel(levelIndex + 1);
-                        else EnterWin();
-                    }
                     break;
 
                 case State.GameOver:
+                    TickGameOverDeath(dt);
                     if (stateTimer <= 0f) StartLevel(levelIndex);
                     break;
 
@@ -259,11 +299,19 @@ namespace NineLives
             hud.SetLives(livesLeft, config.livesPerLevel);
         }
 
-        void TickPlayer(float dt, bool allowDeath)
+        void TickPlayer(float dt, bool allowDeath, bool allowInput = true)
         {
             // A trap hit is already mid-sequence (knockback + hit reaction): control is locked and
             // no other death check applies until GameManager.OnTrapDeathReady takes over.
             if (player.IsDying)
+            {
+                player.Tick(default, dt);
+                return;
+            }
+
+            // Locked during the level-intro banner: still tick so gravity settles the cat, but
+            // ignore every button so a held key doesn't fire the instant control returns.
+            if (!allowInput)
             {
                 player.Tick(default, dt);
                 return;
@@ -361,14 +409,16 @@ namespace NineLives
             hasDiedThisLevel = true;
             var kind = pendingUpgrade == UpgradeType.Trampoline ? CorpseKind.Trampoline : CorpseKind.Normal;
             Vector2 deathVelocity = player.Velocity;
+            // Recoverable death (sacrifice / natural timeout) = soul-leaves-body sequence;
+            // environmental death = poof. Also arms the Animator's Die trigger; since the player
+            // object goes inactive right after, that trigger stays pending and only actually plays
+            // (as DeathRespawn) once BeginLife reactivates the cat at the respawn point.
+            if (unrecoverable) GameEvents.RaisePoofDeath(lastDeathFeet);
+            else GameEvents.RaiseSacrificeDeath(lastDeathFeet);
             // Deactivate (and with it, the CharacterController collider) before spawning the
             // corpse so its clearance search doesn't treat the dying player as an obstacle to
             // dodge around — it can land right on the death spot instead of nearby.
             player.gameObject.SetActive(false);
-            // Recoverable death (sacrifice / natural timeout) = soul-leaves-body sequence;
-            // environmental death = poof. SpawnCorpse raises CorpseSpawned when a body appears.
-            if (unrecoverable) GameEvents.RaisePoofDeath(lastDeathFeet);
-            else GameEvents.RaiseSacrificeDeath(lastDeathFeet);
             if (spawnCorpse) SpawnCorpse(lastDeathFeet, deathVelocity, kind);
             timer.Stop();
             timerStarted = false;
@@ -388,13 +438,96 @@ namespace NineLives
 
         void OnExitReached()
         {
+            if (transitioning) return;
             if (state != State.Playing && state != State.Intro) return;
-            GameEvents.RaiseLevelExited(player.FeetPosition);
             audio.PlayOneShot(sWin);
             timer.Stop();
+            StartCoroutine(ExitSequence());
+        }
+
+        // --- Level transition ---------------------------------------------------------------
+        // Reaching the exit: control dies, the cat and the pad play their exit animations, the
+        // diagonal cut sweeps to black, the next level is swapped in behind it, the cut sweeps
+        // off, the cat plays its entry animation, and only then does input come back.
+
+        IEnumerator ExitSequence()
+        {
+            transitioning = true;
+            EnterState(State.LevelClear, float.PositiveInfinity);
             bool last = levelIndex + 1 >= levels.Count;
-            EnterState(State.LevelClear, 1.7f);
-            hud.Banner(last ? "FINAL EXIT" : "EXIT!", last ? "" : "Nice.", GreyboxFactory.Exit);
+
+            // The cat's exit animation; LevelExit fires the pad's own animator on contact.
+            GameEvents.RaiseLevelExited(player.FeetPosition);
+            if (!config.hideLevelUI)
+                hud.Banner(last ? "FINAL EXIT" : "EXIT!", last ? "" : "Nice.", GreyboxFactory.Exit);
+
+            yield return HoldLocked(config.levelExitAnimTime);
+
+            wipe.Cover(config.wipeCoverTime);
+            yield return HoldWhileWiping();
+
+            hud.HideBanner();
+            if (last)
+            {
+                EnterWin();
+                wipe.Reveal(config.wipeRevealTime);
+            }
+            else yield return EnterLevelSequence(levelIndex + 1);
+
+            transitioning = false;
+        }
+
+        /// Swaps in level `index` behind a covered screen, reveals it, plays the cat's entry
+        /// animation, then hands control back through the normal Intro unlock. The very first
+        /// level in the stack has nothing to transition *from*, so it skips the whole entry beat.
+        IEnumerator EnterLevelSequence(int index)
+        {
+            bool playEntry = index != 0;
+
+            deferEntryEvent = playEntry;
+            StartLevel(index);
+            deferEntryEvent = false;
+
+            if (!playEntry) { wipe.Clear(); yield break; }
+
+            // StartLevel already set Intro with its own duration; hold it open until the reveal
+            // and the entry animation are done, then let it run out normally.
+            EnterState(State.Intro, float.PositiveInfinity);
+
+            yield return HoldLocked(config.wipeBlackHoldTime);
+            wipe.Reveal(config.wipeRevealTime);
+            yield return HoldWhileWiping();
+
+            GameEvents.RaiseLevelEntered(player.FeetPosition);
+            EnterState(State.Intro, config.levelEntryAnimTime);
+        }
+
+        IEnumerator HoldLocked(float seconds)
+        {
+            while (seconds > 0f)
+            {
+                float dt = Time.unscaledDeltaTime;
+                seconds -= dt;
+                TickLocked(dt);
+                yield return null;
+            }
+        }
+
+        IEnumerator HoldWhileWiping()
+        {
+            while (wipe.IsBusy)
+            {
+                TickLocked(Time.unscaledDeltaTime);
+                yield return null;
+            }
+        }
+
+        /// Keeps gravity and animation running on the cat during a transition while every button
+        /// is ignored — the same deal as the level-intro lock, just driven from the coroutine.
+        void TickLocked(float dt)
+        {
+            if (player != null && player.gameObject.activeSelf)
+                TickPlayer(dt, allowDeath: false, allowInput: false);
         }
 
         void EnterGameOver()
@@ -402,6 +535,30 @@ namespace NineLives
             audio.PlayOneShot(sFail);
             EnterState(State.GameOver, 1.6f);
             hud.Banner("OUT OF LIVES", "Resetting the level…", GreyboxFactory.Hazard);
+
+            // Reaching game over on the timer (rather than through Die()) leaves the cat alive and
+            // standing there — it'd idle under the banner. Kill it in place: death event -> death
+            // animation + FX, then hide it once the clip is done.
+            timer.Stop();
+            timerStarted = false;
+            gameOverDeathLeft = 0f;
+            if (player.gameObject.activeSelf)
+            {
+                corpseCarry.DropHeld();
+                player.EnterDeathPose();
+                GameEvents.RaiseSacrificeDeath(player.FeetPosition);
+                gameOverDeathLeft = config.gameOverDeathAnimTime;
+            }
+        }
+
+        /// Lets gravity settle the corpse-to-be while the death animation plays (IsDying means
+        /// Tick takes no input), then hides it before the animator exit-times back to Idle.
+        void TickGameOverDeath(float dt)
+        {
+            if (gameOverDeathLeft <= 0f) return;
+            gameOverDeathLeft -= dt;
+            player.Tick(default, dt);
+            if (gameOverDeathLeft <= 0f) player.gameObject.SetActive(false);
         }
 
         void EnterWin()
@@ -424,11 +581,25 @@ namespace NineLives
 
         void OnMenuLevelChosen(int idx)
         {
+            StopAllCoroutines();
+            transitioning = false;
             paused = false;
             Time.timeScale = 1f;
             menu.Hide();
             hud.gameObject.SetActive(true);
-            StartLevel(idx);
+
+            // Level 0 has no entry beat, so it's a straight cut from the menu as before.
+            if (idx == 0) { StartLevel(0); return; }
+
+            wipe.SetCoveredInstant();
+            StartCoroutine(MenuEnterSequence(idx));
+        }
+
+        IEnumerator MenuEnterSequence(int idx)
+        {
+            transitioning = true;
+            yield return EnterLevelSequence(idx);
+            transitioning = false;
         }
 
         void OnMenuResume()
@@ -440,6 +611,9 @@ namespace NineLives
 
         void OnMenuBackToMenu()
         {
+            StopAllCoroutines();
+            transitioning = false;
+            if (wipe != null) wipe.Clear();
             paused = false;
             Time.timeScale = 1f;
             if (corpseCarry != null) corpseCarry.DropHeld();
@@ -474,7 +648,11 @@ namespace NineLives
         Corpse GetPooledCorpse()
         {
             foreach (var c in corpsePool)
-                if (c != null && !c.gameObject.activeSelf) return c;
+            {
+                if (c == null || c.gameObject.activeSelf) continue;
+                ReturnToPoolRoot(c);
+                return c;
+            }
             var go = Instantiate(corpsePrefab, corpseRoot);
             go.SetActive(false);
             var corpse = go.GetComponent<Corpse>();
@@ -512,7 +690,22 @@ namespace NineLives
 
         void ClearCorpses()
         {
-            foreach (var c in corpsePool) if (c != null) c.gameObject.SetActive(false);
+            foreach (var c in corpsePool)
+            {
+                if (c == null) continue;
+                ReturnToPoolRoot(c);
+                c.gameObject.SetActive(false);
+            }
+        }
+
+        /// A settled corpse parents itself onto whatever moving thing it came to rest on, which puts
+        /// it inside the level hierarchy. Pull it back under corpseRoot before anything disables a
+        /// level, or it gets deactivated with its carrier while still counting as in-use (activeSelf
+        /// stays true), and the pool leaks a corpse per level switch.
+        void ReturnToPoolRoot(Corpse c)
+        {
+            c.Detach();
+            if (c.transform.parent != corpseRoot) c.transform.SetParent(corpseRoot, true);
         }
     }
 }

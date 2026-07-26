@@ -13,6 +13,7 @@ namespace NineLives
         CharacterController cc;
         PlatformerMotor motor;
         Transform mesh;
+        SpringSquash squash;
 
         [Tooltip("Cat art/sprite root to flip on the X axis when facing changes. Assign in the prefab.")]
         [SerializeField] Transform catSprite;
@@ -27,6 +28,9 @@ namespace NineLives
         public bool Grounded { get; private set; }
         public Vector2 Velocity => motor.Velocity;
         public Vector3 FeetPosition => transform.position;
+        /// The last horizontal facing sign (+1/-1) the player committed to. Static so a spawning
+        /// corpse can face the death direction without wiring a reference through GameManager.
+        public static float LastFacingSign { get; private set; } = 1f;
         public bool JumpedThisStep { get; private set; }
         public bool BouncedThisStep { get; private set; }
         public bool LandedThisStep { get; private set; }
@@ -61,11 +65,12 @@ namespace NineLives
             cc = GetComponent<CharacterController>();
             cc.height = cfg.playerHeight;
             cc.radius = cfg.playerRadius;
-            cc.center = Vector3.up * (cfg.playerHeight * 0.5f);
+            cc.center = Vector3.up * (cfg.playerHeight * 0.2f);
             cc.skinWidth = 0.02f;
             cc.minMoveDistance = 0f;
 
             mesh = transform.Find("Cat");
+            squash = mesh.GetComponent<SpringSquash>();
 
             flashRenderers = mesh.GetComponentsInChildren<SpriteRenderer>(true);
             flashBaseColors = new Color[flashRenderers.Length];
@@ -85,6 +90,17 @@ namespace NineLives
             IsDying = false;
             ResetHitFlash();
             gameObject.SetActive(true);
+        }
+
+        /// Death with no hazard behind it: the level's last soul burned down while the cat was
+        /// still standing there. Kills input/facing updates and freezes the animator params (see
+        /// PlayerAnimatorDriver) so the death animation can play out in place before GameManager
+        /// hides the object.
+        public void EnterDeathPose()
+        {
+            if (IsDying) return;
+            IsDying = true;
+            motor.Velocity = new Vector2(0f, motor.Velocity.y);
         }
 
         /// Reusable instant-kill entry point: any hazard (DeathTrap today, future instant-kill
@@ -172,7 +188,7 @@ namespace NineLives
                 if (verticalDelta.sqrMagnitude > 0f) cc.Move(verticalDelta);
             }
 
-            bool grounded = Probe(out bool onTrampoline, out Transform surface);
+            bool grounded = Probe(out bool onTrampoline, out Transform surface, out Corpse surfaceCorpse);
             ridingSurface = grounded ? surface : null;
             if (ridingSurface != null) ridingSurfaceLastPos = ridingSurface.position;
             float impactVy = motor.Velocity.y;
@@ -216,6 +232,11 @@ namespace NineLives
             if (JumpedThisStep) GameEvents.RaiseJumped(FeetPosition);
             if (HardLandedThisStep) GameEvents.RaiseHardLanded(FeetPosition);
             else if (LandedThisStep) GameEvents.RaiseLanded(FeetPosition);
+
+            // Jiggle any corpse we just landed on. (The cat's own squash listens to the jump/land
+            // GameEvents itself, so nothing to drive here.)
+            if ((LandedThisStep || HardLandedThisStep || BouncedThisStep) && surfaceCorpse != null)
+                surfaceCorpse.Jiggle();
             TickFootsteps(dt);
 
             float combinedX = Mathf.Clamp(platformVelX + motor.Velocity.x, -cfg.maxSpeed, cfg.maxSpeed);
@@ -229,10 +250,18 @@ namespace NineLives
                 cc.enabled = false; transform.position = p; cc.enabled = true;
             }
 
-            if (catSprite != null && Mathf.Abs(motor.Velocity.x) > 0.15f)
-                catSprite.localScale = new Vector3(
-                    Mathf.Sign(motor.Velocity.x) * Mathf.Abs(catSprite.localScale.x),
-                    catSprite.localScale.y, catSprite.localScale.z);
+            // Facing flip. SpringSquash is the sole writer of the Cat's localScale when present,
+            // so route the flip through it; fall back to a direct write only if it isn't wired yet.
+            if (Mathf.Abs(motor.Velocity.x) > 0.15f)
+            {
+                float sign = Mathf.Sign(motor.Velocity.x);
+                LastFacingSign = sign;
+                if (squash != null) squash.FacingSign = sign;
+                else if (catSprite != null)
+                    catSprite.localScale = new Vector3(
+                        sign * Mathf.Abs(catSprite.localScale.x),
+                        catSprite.localScale.y, catSprite.localScale.z);
+            }
 
             wasGrounded = grounded;
         }
@@ -274,10 +303,13 @@ namespace NineLives
 
         /// Ridable surface can be a MovingPlatform directly underfoot, or a Corpse standing on
         /// one (chains through Corpse's own ridingSurface the same way stacked corpses do).
-        bool Probe(out bool onTrampoline, out Transform surface)
+        /// `surfaceCorpse` is reported separately because a settled corpse parents itself onto its
+        /// carrier, so the ride target can be the platform while the thing we landed on is the body.
+        bool Probe(out bool onTrampoline, out Transform surface, out Corpse surfaceCorpse)
         {
             onTrampoline = false;
             surface = null;
+            surfaceCorpse = null;
             float r = cfg.playerRadius * 0.92f;
             Vector3 origin = transform.position + Vector3.up * (cfg.playerRadius + 0.02f);
             float dist = cfg.playerRadius + cfg.groundProbeDepth;
@@ -291,6 +323,7 @@ namespace NineLives
                 grounded = true;
                 var corpse = h.collider.GetComponentInParent<Corpse>();
                 if (corpse != null && corpse.Kind == CorpseKind.Trampoline) onTrampoline = true;
+                if (surfaceCorpse == null) surfaceCorpse = corpse;
                 if (surface == null)
                 {
                     var platform = h.collider.GetComponentInParent<MovingPlatform>();

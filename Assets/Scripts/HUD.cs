@@ -42,6 +42,13 @@ namespace NineLives
         public void SetLevel(string name, int index, int total) =>
             levelLabel.text = $"LEVEL {index}/{total}\n{name}";
 
+        /// Toggles the level name and hint text (the "chrome" a jam config can hide).
+        public void SetChromeVisible(bool visible)
+        {
+            levelLabel.gameObject.SetActive(visible);
+            hintText.gameObject.SetActive(visible);
+        }
+
         public void ShowTimerText(bool show)
         {
             timerText.gameObject.SetActive(show);

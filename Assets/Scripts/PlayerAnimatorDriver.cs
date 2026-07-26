@@ -30,7 +30,6 @@ namespace NineLives
         static readonly int tIdle2 = Animator.StringToHash("Idle2");
         static readonly int tDie = Animator.StringToHash("Die");
         static readonly int tHit = Animator.StringToHash("Hit");
-        static readonly int tCorpse = Animator.StringToHash("Corpse");
         static readonly int tLevelEnter = Animator.StringToHash("LevelEnter");
         static readonly int tLevelExit = Animator.StringToHash("LevelExit");
         static readonly int tThrow = Animator.StringToHash("Throw");
@@ -54,7 +53,6 @@ namespace NineLives
             GameEvents.SacrificeDeath += OnDeath;
             GameEvents.PoofDeath += OnDeath;
             GameEvents.TrapHit += OnTrapHit;
-            GameEvents.CorpseSpawned += OnCorpseSpawned;
             GameEvents.LevelEntered += OnLevelEntered;
             GameEvents.LevelExited += OnLevelExited;
             GameEvents.ChargeStarted += OnChargeThrow;
@@ -69,7 +67,6 @@ namespace NineLives
             GameEvents.SacrificeDeath -= OnDeath;
             GameEvents.PoofDeath -= OnDeath;
             GameEvents.TrapHit -= OnTrapHit;
-            GameEvents.CorpseSpawned -= OnCorpseSpawned;
             GameEvents.LevelEntered -= OnLevelEntered;
             GameEvents.LevelExited -= OnLevelExited;
             GameEvents.ChargeStarted -= OnChargeThrow;
@@ -79,6 +76,9 @@ namespace NineLives
         void Update()
         {
             if (anim == null || player == null) return;
+            // While dying, hold whatever death/hit state we're in: the live params still describe
+            // the last living frame (Falling, mid-run Speed) and would transition straight back out.
+            if (player.IsDying) return;
 
             float speed = Mathf.Abs(player.Velocity.x);
             bool grounded = player.Grounded;
@@ -89,6 +89,12 @@ namespace NineLives
             anim.SetBool(pGrounded, grounded);
             anim.SetBool(pCharging, charging);
             anim.SetBool(pFalling, falling);
+
+            // Land is only consumed by the Falling state, so one set on a landing the animator
+            // wasn't in Falling for (quick hop, buffered jump straight off a landing) would sit
+            // pending and yank us out of the *next* fall mid-air. Landed only ever fires on a
+            // grounded frame, so clearing it while airborne can't eat a real one.
+            if (!grounded) anim.ResetTrigger(tLand);
 
             // Secondary idle after standing still long enough; reset the moment anything happens.
             bool idle = grounded && !charging && speed < 0.15f;
@@ -108,9 +114,18 @@ namespace NineLives
 
         void OnLanded(Vector3 _) => anim.SetTrigger(tLand);
         void OnHardLanded(Vector3 _) => anim.SetTrigger(tHardLand);
-        void OnDeath(Vector3 _) => anim.SetTrigger(tDie);
+        /// Neutralise the params before the trigger so the death state can't be immediately
+        /// exited by a stale Falling/Speed left over from the frame the cat died on.
+        void OnDeath(Vector3 _)
+        {
+            anim.SetFloat(pSpeed, 0f);
+            anim.SetBool(pGrounded, true);
+            anim.SetBool(pCharging, false);
+            anim.SetBool(pFalling, false);
+            anim.SetTrigger(tDie);
+        }
+
         void OnTrapHit(Vector3 _) => anim.SetTrigger(tHit);
-        void OnCorpseSpawned(Vector3 _) => anim.SetTrigger(tCorpse);
         void OnLevelEntered(Vector3 _) => anim.SetTrigger(tLevelEnter);
         void OnLevelExited(Vector3 _) => anim.SetTrigger(tLevelExit);
         void OnChargeThrow(Vector3 _) => anim.SetTrigger(tChargeThrow);
