@@ -5397,7 +5397,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43bd889fef6298343a347619882fd543, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.LevelExit
-  padAnimator: {fileID: 0}
+  padAnimator: {fileID: 3726962451776101117}
 --- !u!1 &6637945214534745641
 GameObject:
   m_ObjectHideFlags: 0
