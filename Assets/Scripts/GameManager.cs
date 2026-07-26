@@ -510,10 +510,13 @@ namespace NineLives
             EnterState(State.Intro, float.PositiveInfinity);
 
             yield return HoldLocked(config.wipeBlackHoldTime);
+            // Fire the entry animation before the reveal so the cat is already mid-entry as the
+            // level wipes into view — otherwise the animator sits in its default Idle throughout
+            // the reveal and only starts the entry beat after the screen is fully open.
+            GameEvents.RaiseLevelEntered(player.FeetPosition);
             wipe.Reveal(config.wipeRevealTime);
             yield return HoldWhileWiping();
 
-            GameEvents.RaiseLevelEntered(player.FeetPosition);
             EnterState(State.Intro, config.levelEntryAnimTime);
         }
 
