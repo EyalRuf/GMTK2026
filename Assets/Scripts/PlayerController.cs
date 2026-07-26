@@ -78,10 +78,6 @@ namespace NineLives
                 flashBaseColors[i] = flashRenderers[i].color;
         }
 
-        /// Toggles just the CharacterController, e.g. so a physics clearance check (corpse
-        /// placement) doesn't treat the still-active, mid-death-animation player as an obstacle.
-        public void SetColliderEnabled(bool enabled) => cc.enabled = enabled;
-
         public void Spawn(Vector3 feet)
         {
             cc.enabled = false;
