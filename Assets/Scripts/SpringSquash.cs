@@ -13,7 +13,10 @@ namespace NineLives
     ///    lands on the body.
     public class SpringSquash : MonoBehaviour
     {
-        [Header("Spring feel")]
+        // === SHARED: affects BOTH the corpse AND the live cat once the Rubber pickup is armed. ===
+        // (This is the core spring. On the live cat before the pickup it runs but is invisible,
+        //  because the amplitude is 0 — so in practice: the rubbery cat and every corpse.)
+        [Header("Spring feel  (corpse + rubber-cat)")]
         [Tooltip("Higher = snaps back faster.")]
         public float stiffness = 220f;
         [Tooltip("Higher = settles with fewer wobbles.")]
@@ -23,17 +26,22 @@ namespace NineLives
         [Tooltip("How much width shrinks as height stretches (fakes volume preservation).")]
         public float poisson = 0.6f;
 
-        [Header("Live cat reactions (ignored on a corpse)")]
+        // === LIVE PLAYER CAT ONLY. Completely ignored on a corpse. ===
+        // The Jump/Land kicks fire all the time, but you only SEE them once Rubber Amplitude > 0
+        // (i.e. after the Rubber pickup). Before the pickup the cat is fully rigid.
+        [Header("Live cat only  (visible after Rubber pickup)")]
         [Tooltip("Stretch kick when the player jumps.")]
         public float jumpKick = 0.5f;
         [Tooltip("Squash kick on a normal landing.")]
         public float landKick = -0.6f;
         [Tooltip("Squash kick on a hard landing.")]
         public float hardLandKick = -1.1f;
-        [Tooltip("Squash amount while the Rubber pickup is armed. The base cat is rigid (0).")]
+        [Tooltip("THE POWERUP KNOB. How rubbery the cat gets once Rubber is picked up. " +
+                 "0 = rigid (the cat's state before the pickup, and after respawn).")]
         public float rubberAmplitude = 2.5f;
 
-        [Header("Corpse reaction (ignored on the live cat)")]
+        // === CORPSE ONLY. Ignored on the live cat. The corpse is always springy. ===
+        [Header("Corpse only  (jiggle when stepped on)")]
         [Tooltip("Jiggle kick when the player lands on this corpse.")]
         public float jiggleKick = -0.7f;
 

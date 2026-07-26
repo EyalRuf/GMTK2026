@@ -60,8 +60,31 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 02272dac003a08b4c88f6a354e7b69a2, type: 2}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 175949505403398115, guid: 111d833ef7f145d42962abaa6e00a07f, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4045308915285096371, guid: 111d833ef7f145d42962abaa6e00a07f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1891124688678610637}
   m_SourcePrefab: {fileID: 100100000, guid: 111d833ef7f145d42962abaa6e00a07f, type: 3}
+--- !u!1 &9108025696944230237 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4045308915285096371, guid: 111d833ef7f145d42962abaa6e00a07f, type: 3}
+  m_PrefabInstance: {fileID: 5063706363599026414}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1891124688678610637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9108025696944230237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be0bd9e09e93e8478e4861921229eab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NineLives.RubberPickup
+  bobHeight: 0.2
+  bobSpeed: 2
