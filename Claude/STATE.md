@@ -371,6 +371,26 @@ asset, not a `GameObject.CreatePrimitive` + generated `Material` in code.
 - `GreyboxFactory.Box()`/`.Make()` are still there for anything not yet converted, but nothing in
   the shipped systems calls them anymore except the line above.
 
+## Post-processing & atmosphere (warm-hellish grade + localized heat)
+
+- **Color grade** — `Assets/Settings/NineLives_Volume.asset` (our VolumeProfile, 6 overrides:
+  Neutral Tonemapping, warm Bloom, ColorAdjustments +contrast/+sat/warm filter, warm White
+  Balance, dark-red Vignette, Split Toning). Applied via a global `PostFX` child Volume **on
+  `Camera.prefab`** (not in `Game.unity` — deliberately, to avoid conflicting with teammates'
+  scene edits). `Camera.prefab`'s URP data now has `renderPostProcessing` on. All numbers are
+  Inspector-tunable live. To remove: delete the PostFX child + turn the flag back off.
+- **Localized heat turbulence** — `Assets/Prefabs/HeatShimmer.prefab`: a transparent quad using
+  `Mat_HeatDistortion` (`Custom/URP/HeatDistortion`, samples `_CameraOpaqueTexture`), noise =
+  `Assets/Sprites/Noise_Heat.png` (seamless). Shader now scrolls on **Y** so heat rises. Nudged
+  −0.5 Z toward camera to avoid z-fighting. **Not placed in any level yet** — drag it over
+  `LAVA`/`LavaPool`/`LavaWaterfall` instances and scale to the hot zone; tune `_Strength`
+  (~0.02) / `_Tiling` on the material.
+- **Not yet playtested in Play mode** — edit-mode game view is black (levels/player disabled
+  until runtime); the vignette was visible in an edit capture, confirming the profile is live.
+  Enter Play to see bloom/contrast/warmth on real content and tune.
+- **Deferred**: character rim light / inner shadow (cat is unlit 2D sprites across several
+  materials; building block `SpriteGlowDirectionalImproved.shader` + `SpriteSideGlow.mat` exists).
+
 ## Half-done / known broken
 
 - **Scene-based architecture not yet playtested in Play mode** — compiles clean, all scene refs

@@ -105,10 +105,15 @@ namespace NineLives
             value = Mathf.Clamp(value, -maxSquash, maxSquash);
 
             float s = value * Amplitude;
+            // Divide the authored base by the parent's world scale so baseScale means the same
+            // real (in-world) size no matter how the parent is stretched. On the live cat the
+            // parent is unscaled (no-op); on a corpse the parent is stretched to corpseSize, and
+            // this cancels it — so the same authored value on both prefabs gives the same size.
+            Vector3 p = transform.parent != null ? transform.parent.lossyScale : Vector3.one;
             transform.localScale = new Vector3(
-                baseScale.x * (1f - s * poisson) * FacingSign,
-                baseScale.y * (1f + s),
-                baseScale.z);
+                baseScale.x / p.x * (1f - s * poisson) * FacingSign,
+                baseScale.y / p.y * (1f + s),
+                baseScale.z / p.z);
         }
     }
 }
