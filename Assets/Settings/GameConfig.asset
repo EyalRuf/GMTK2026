@@ -44,6 +44,8 @@ MonoBehaviour:
   trampolineMaxBounce: 24
   trampolineHoldBounceMultiplier: 1.35
   trampolinePlayerJumpMultiplier: 1.35
+  trampolineTint: {r: 0.33501595, g: 0.8415094, b: 0.33501598, a: 1}
+  trampolineTintStrength: 0.25
   powerupRespawnTime: 10
   carryPickupRange: 2.2
   carrySpeedMultiplier: 0.55
