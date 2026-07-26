@@ -105,6 +105,18 @@ namespace NineLives
         [Tooltip("Seconds the cat's death animation plays under the OUT OF LIVES banner before it's hidden (should match Anim_DeathRespawn's length).")]
         public float gameOverDeathAnimTime = 0.85f;
 
+        [Header("Level Transition")]
+        [Tooltip("Seconds the cat's exit animation + the exit pad's animation play before the screen starts wiping to black.")]
+        public float levelExitAnimTime = 1f;
+        [Tooltip("Seconds the diagonal cut takes to sweep in and cover the screen.")]
+        public float wipeCoverTime = 0.45f;
+        [Tooltip("Seconds held on full black while the next level is swapped in.")]
+        public float wipeBlackHoldTime = 0.15f;
+        [Tooltip("Seconds the diagonal cut takes to sweep off and reveal the new level.")]
+        public float wipeRevealTime = 0.45f;
+        [Tooltip("Seconds the cat's level-entry animation plays after the reveal before input unlocks.")]
+        public float levelEntryAnimTime = 0.6f;
+
         [Header("Camera")]
         public Vector3 cameraOffset = new Vector3(0f, 1.5f, -15f);
         public float cameraSmoothing = 0.16f;

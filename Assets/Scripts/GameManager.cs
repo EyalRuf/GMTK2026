@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +21,8 @@ namespace NineLives
         public HUD hud;
         [Tooltip("Pre-placed MenuUI object.")]
         public MenuUI menu;
+        [Tooltip("Pre-placed ScreenWipe object: the diagonal cut to black between levels.")]
+        public ScreenWipe wipe;
         [Tooltip("Corpse prefab: pooled at runtime under corpseRoot, never destroyed.")]
         public GameObject corpsePrefab;
         [Tooltip("Empty scene object the corpse pool is parented under.")]
@@ -51,6 +54,8 @@ namespace NineLives
         float soulInterval;
         float nextBoundary;
         bool hasDiedThisLevel;
+        bool transitioning;
+        bool deferEntryEvent;
         Vector3 lastDeathFeet;
         bool lastDeathUnrecoverable;
         float gameOverDeathLeft;
@@ -112,6 +117,9 @@ namespace NineLives
 
         void StartLevel(int i)
         {
+            // Restart / game over / the debug level keys all land here mid-nowhere; make sure no
+            // wipe is left covering the screen. Inside a transition the cover is deliberate.
+            if (!transitioning && wipe != null) wipe.Clear();
             levelIndex = i;
             SaveData.HighestUnlockedLevel = Mathf.Max(SaveData.HighestUnlockedLevel, i);
             if (corpseCarry != null) corpseCarry.DropHeld();
@@ -175,7 +183,9 @@ namespace NineLives
             if (config.respawnAtDeathSpot && hasDiedThisLevel && !lastDeathUnrecoverable)
                 spawnFeet = ResolveSpawnClearance(lastDeathFeet + Vector3.left * config.respawnOffsetX);
             player.Spawn(spawnFeet);
-            GameEvents.RaiseLevelEntered(spawnFeet);
+            // During a level transition the entry animation is held back until the wipe has
+            // revealed the new level — EnterLevelSequence raises it. Respawns raise it here.
+            if (!deferEntryEvent) GameEvents.RaiseLevelEntered(spawnFeet);
             cam.Snap();
             timerStarted = false;
             graceLeft = config.respawnGrace;
@@ -201,6 +211,12 @@ namespace NineLives
         void Update()
         {
             input.Sample();
+
+            // A level transition owns the game entirely while it runs: no pause, no restart, no
+            // debug level jumping, no camera panning — any of those mid-wipe strands a black
+            // panel over the screen. The transition coroutine ticks the player itself.
+            if (transitioning) return;
+
             if (cam != null) cam.SetLookInput(input.LookUpHeld, input.LookDownHeld);
 
             if (state == State.MainMenu) return;
@@ -247,12 +263,9 @@ namespace NineLives
                     }
                     break;
 
+                // LevelClear is driven entirely by ExitSequence (which runs with `transitioning`
+                // set, so this switch isn't reached); the state is just a re-entry guard.
                 case State.LevelClear:
-                    if (stateTimer <= 0f)
-                    {
-                        if (levelIndex + 1 < levels.Count) StartLevel(levelIndex + 1);
-                        else EnterWin();
-                    }
                     break;
 
                 case State.GameOver:
@@ -407,14 +420,96 @@ namespace NineLives
 
         void OnExitReached()
         {
+            if (transitioning) return;
             if (state != State.Playing && state != State.Intro) return;
-            GameEvents.RaiseLevelExited(player.FeetPosition);
             audio.PlayOneShot(sWin);
             timer.Stop();
+            StartCoroutine(ExitSequence());
+        }
+
+        // --- Level transition ---------------------------------------------------------------
+        // Reaching the exit: control dies, the cat and the pad play their exit animations, the
+        // diagonal cut sweeps to black, the next level is swapped in behind it, the cut sweeps
+        // off, the cat plays its entry animation, and only then does input come back.
+
+        IEnumerator ExitSequence()
+        {
+            transitioning = true;
+            EnterState(State.LevelClear, float.PositiveInfinity);
             bool last = levelIndex + 1 >= levels.Count;
-            EnterState(State.LevelClear, 1.7f);
+
+            // The cat's exit animation; LevelExit fires the pad's own animator on contact.
+            GameEvents.RaiseLevelExited(player.FeetPosition);
             if (!config.hideLevelUI)
                 hud.Banner(last ? "FINAL EXIT" : "EXIT!", last ? "" : "Nice.", GreyboxFactory.Exit);
+
+            yield return HoldLocked(config.levelExitAnimTime);
+
+            wipe.Cover(config.wipeCoverTime);
+            yield return HoldWhileWiping();
+
+            hud.HideBanner();
+            if (last)
+            {
+                EnterWin();
+                wipe.Reveal(config.wipeRevealTime);
+            }
+            else yield return EnterLevelSequence(levelIndex + 1);
+
+            transitioning = false;
+        }
+
+        /// Swaps in level `index` behind a covered screen, reveals it, plays the cat's entry
+        /// animation, then hands control back through the normal Intro unlock. The very first
+        /// level in the stack has nothing to transition *from*, so it skips the whole entry beat.
+        IEnumerator EnterLevelSequence(int index)
+        {
+            bool playEntry = index != 0;
+
+            deferEntryEvent = playEntry;
+            StartLevel(index);
+            deferEntryEvent = false;
+
+            if (!playEntry) { wipe.Clear(); yield break; }
+
+            // StartLevel already set Intro with its own duration; hold it open until the reveal
+            // and the entry animation are done, then let it run out normally.
+            EnterState(State.Intro, float.PositiveInfinity);
+
+            yield return HoldLocked(config.wipeBlackHoldTime);
+            wipe.Reveal(config.wipeRevealTime);
+            yield return HoldWhileWiping();
+
+            GameEvents.RaiseLevelEntered(player.FeetPosition);
+            EnterState(State.Intro, config.levelEntryAnimTime);
+        }
+
+        IEnumerator HoldLocked(float seconds)
+        {
+            while (seconds > 0f)
+            {
+                float dt = Time.unscaledDeltaTime;
+                seconds -= dt;
+                TickLocked(dt);
+                yield return null;
+            }
+        }
+
+        IEnumerator HoldWhileWiping()
+        {
+            while (wipe.IsBusy)
+            {
+                TickLocked(Time.unscaledDeltaTime);
+                yield return null;
+            }
+        }
+
+        /// Keeps gravity and animation running on the cat during a transition while every button
+        /// is ignored — the same deal as the level-intro lock, just driven from the coroutine.
+        void TickLocked(float dt)
+        {
+            if (player != null && player.gameObject.activeSelf)
+                TickPlayer(dt, allowDeath: false, allowInput: false);
         }
 
         void EnterGameOver()
@@ -468,11 +563,25 @@ namespace NineLives
 
         void OnMenuLevelChosen(int idx)
         {
+            StopAllCoroutines();
+            transitioning = false;
             paused = false;
             Time.timeScale = 1f;
             menu.Hide();
             hud.gameObject.SetActive(true);
-            StartLevel(idx);
+
+            // Level 0 has no entry beat, so it's a straight cut from the menu as before.
+            if (idx == 0) { StartLevel(0); return; }
+
+            wipe.SetCoveredInstant();
+            StartCoroutine(MenuEnterSequence(idx));
+        }
+
+        IEnumerator MenuEnterSequence(int idx)
+        {
+            transitioning = true;
+            yield return EnterLevelSequence(idx);
+            transitioning = false;
         }
 
         void OnMenuResume()
@@ -484,6 +593,9 @@ namespace NineLives
 
         void OnMenuBackToMenu()
         {
+            StopAllCoroutines();
+            transitioning = false;
+            if (wipe != null) wipe.Clear();
             paused = false;
             Time.timeScale = 1f;
             if (corpseCarry != null) corpseCarry.DropHeld();

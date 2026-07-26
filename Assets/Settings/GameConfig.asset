@@ -22,7 +22,7 @@ MonoBehaviour:
   jumpHeight: 3.85
   jumpHoldTime: 0.6
   quickJumpMaxHold: 0.08
-  chargeGraceTime: 0.17
+  chargeGraceTime: 0.1
   chargeGraceSpeedMultiplier: 0.7
   chargePlantDeceleration: 45
   timeToApex: 0.36
@@ -44,6 +44,7 @@ MonoBehaviour:
   trampolineMaxBounce: 24
   trampolineHoldBounceMultiplier: 1.35
   trampolinePlayerJumpMultiplier: 1.35
+  powerupRespawnTime: 10
   carryPickupRange: 2.2
   carrySpeedMultiplier: 0.55
   carryThrowSpeed: 18
