@@ -555,6 +555,7 @@ namespace NineLives
             transitioning = true;
             EnterState(State.Ending, float.PositiveInfinity);
             hud.HideBanner();
+            hud.HideCountdown();
             corpseCarry.DropHeld();
             corpseCarry.SetEnabled(false);
 

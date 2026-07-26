@@ -66,11 +66,11 @@ MonoBehaviour:
   wipeRevealTime: 0.45
   levelEntryAnimTime: 0.6
   endingFocusPanTime: 1
-  endingFocusHoldTime: 1
-  endingFocusPadding: 2
-  endingFadeOutTime: 0
-  endingFadeInTime: 0
-  endingSplashMinHoldTime: 3
+  endingFocusHoldTime: 2
+  endingFocusPadding: 3
+  endingFadeOutTime: 1.5
+  endingFadeInTime: 1.5
+  endingSplashMinHoldTime: 4
   endingFadeToMenuTime: 1
   cameraOffset: {x: 0, y: 1.5, z: -15}
   cameraSmoothing: 0.16

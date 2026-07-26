@@ -90,5 +90,14 @@ namespace NineLives
             bannerText.gameObject.SetActive(false);
             bannerSub.gameObject.SetActive(false);
         }
+
+        /// Hides the timer number and soul icons immediately — used when a cutscene (the ending
+        /// sequence) takes over and the countdown no longer applies, ahead of the HUD as a whole
+        /// being disabled later in that same sequence.
+        public void HideCountdown()
+        {
+            timerText.gameObject.SetActive(false);
+            soulRow.gameObject.SetActive(false);
+        }
     }
 }
