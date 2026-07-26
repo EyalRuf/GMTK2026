@@ -413,7 +413,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1882269858412521240, guid: 95851e10c08f68843bf9d3b211a790ea, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2202246415419537126, guid: 95851e10c08f68843bf9d3b211a790ea, type: 3}
       propertyPath: m_LocalRotation.w
@@ -531,6 +531,10 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 3101485548591447867, guid: 095a72fc8a19bcd41bc329c53522e9f5, type: 2}
+    - target: {fileID: 8894852211119289086, guid: 95851e10c08f68843bf9d3b211a790ea, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9207264472589769857, guid: 95851e10c08f68843bf9d3b211a790ea, type: 3}
       propertyPath: m_LocalRotation.w
       value: -0.60947937
@@ -6077,24 +6081,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6989345428336189216, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1713105062}
   m_SourcePrefab: {fileID: 100100000, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
 --- !u!114 &1713105057 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 514219080898342875, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
   m_PrefabInstance: {fileID: 1713105056}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1713105058}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d26f2046a252c4479f3337fd4af6af9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.CameraFollow
+--- !u!1 &1713105058 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6989345428336189216, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
+  m_PrefabInstance: {fileID: 1713105056}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1713105061 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5226320407618653204, guid: 534a99da5d2532a4e88cb1d0f489b72e, type: 3}
   m_PrefabInstance: {fileID: 1713105056}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1713105062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1713105058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 552d255b5450a344aa491b3c63a0625b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NineLives.SortingLayerBlur
+  layers:
+  - sortingLayer: FG3
+    blur: 7.7
+  - sortingLayer: FG2
+    blur: 16.9
+  - sortingLayer: FG1
+    blur: 28
+  rescanInterval: 1
+  replaceCustomMaterials: 0
 --- !u!1001 &1745552576
 PrefabInstance:
   m_ObjectHideFlags: 0

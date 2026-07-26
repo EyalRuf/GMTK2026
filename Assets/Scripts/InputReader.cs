@@ -46,7 +46,7 @@ namespace NineLives
                 LookDownHeld |= k.sKey.isPressed || k.downArrowKey.isPressed;
                 SacrificePressed |= k.qKey.wasPressedThisFrame || k.eKey.wasPressedThisFrame || k.leftShiftKey.wasPressedThisFrame;
                 RestartPressed |= k.rKey.wasPressedThisFrame;
-                PausePressed |= k.escapeKey.wasPressedThisFrame;
+                PausePressed |= k.pKey.wasPressedThisFrame;
                 PrevLevelPressed |= k.kKey.wasPressedThisFrame;
                 NextLevelPressed |= k.lKey.wasPressedThisFrame;
             }
