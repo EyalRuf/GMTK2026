@@ -146,7 +146,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.LevelRoot
   levelName: LEVEL NAME
   hint: HINT
-  timer: 9
+  timer: 5
   entry: {fileID: 9175735986498027493}
   exit: {fileID: 8333108249115905144}
 --- !u!1 &445093148044764867
@@ -589,7 +589,7 @@ Transform:
   m_GameObject: {fileID: 3342542585814560703}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.0499392, z: -0, w: 0.99875224}
-  m_LocalPosition: {x: 1.076, y: -0.9, z: -0.00000008587311}
+  m_LocalPosition: {x: 1.0754299, y: -0.9022409, z: -0.00000008587311}
   m_LocalScale: {x: -0.1155556, y: 0.52, z: 0.34666666}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -681,7 +681,7 @@ Transform:
   m_GameObject: {fileID: 3456753475989260921}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.0499392, z: -0, w: 0.99875224}
-  m_LocalPosition: {x: 0.0719445, y: -0.9, z: -0.00000008587311}
+  m_LocalPosition: {x: 0.021452818, y: -0.9, z: -0.00000008587311}
   m_LocalScale: {x: -0.1155556, y: 0.52, z: 0.34666666}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1835,6 +1835,10 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 5694550126528230058, guid: 9137e81c4786a7341ae0ae24582dc044, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: dcb868c494b4bc8408d40e75ed39f45b, type: 2}
     - target: {fileID: 6032315473362017826, guid: 9137e81c4786a7341ae0ae24582dc044, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.7
@@ -2293,6 +2297,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4854237861695356994, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5420027761483490522, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
       propertyPath: m_FlipX
       value: 1
@@ -2345,6 +2353,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: -0.5701443
       objectReference: {fileID: 0}
+    - target: {fileID: 9129996465286024859, guid: e7e3a70467c09724cb95ca2c3af70c70, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: dcb868c494b4bc8408d40e75ed39f45b, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2820,7 +2832,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3391095506607523085, guid: 8ac733e06129f774f8193badb9a16a93, type: 3}
       propertyPath: message
-      value: Q to drop a corpse
+      value: Q to drop a soul
       objectReference: {fileID: 0}
     - target: {fileID: 3391095506607523085, guid: 8ac733e06129f774f8193badb9a16a93, type: 3}
       propertyPath: duration

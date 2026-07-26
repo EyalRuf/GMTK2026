@@ -28,6 +28,7 @@ namespace NineLives
         BoxCollider col;
         MeshRenderer meshRenderer;
         SpringSquash visualSquash;
+        CatTint catTint;
         float stillFor;
         Transform ridingSurface;
         Vector3 ridingSurfaceLastPos;
@@ -86,6 +87,13 @@ namespace NineLives
             rb.linearVelocity = new Vector3(launchVelocity.x, launchVelocity.y, 0f);
 
             meshRenderer.sharedMaterial = Kind == CorpseKind.Trampoline ? trampolineMat : normalMat;
+
+            if (catTint == null) catTint = GetComponentInChildren<CatTint>(true);
+            if (catTint != null)
+            {
+                catTint.gameplayTint = cfg.trampolineTint;
+                catTint.gameplayStrength = Kind == CorpseKind.Trampoline ? cfg.trampolineTintStrength : 0f;
+            }
         }
 
         void FixedUpdate()

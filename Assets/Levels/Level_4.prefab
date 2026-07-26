@@ -62,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NineLives.LevelRoot
   levelName: LEVEL NAME
   hint: HINT
-  timer: 9
+  timer: 5
   entry: {fileID: 1183172895667510906}
   exit: {fileID: 3930470954147488828}
 --- !u!1 &2350271588929788269
@@ -1015,7 +1015,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1675176375444976523, guid: 111d833ef7f145d42962abaa6e00a07f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.14
+      value: 3.33
       objectReference: {fileID: 0}
     - target: {fileID: 1675176375444976523, guid: 111d833ef7f145d42962abaa6e00a07f, type: 3}
       propertyPath: m_LocalPosition.z

@@ -69,6 +69,10 @@ namespace NineLives
         public float trampolineHoldBounceMultiplier = 1.35f;
         [Tooltip("Player's own jump velocity multiplier while the Trampoline upgrade is armed this life.")]
         public float trampolinePlayerJumpMultiplier = 1.35f;
+        [Tooltip("Color the cat (and the corpse it leaves) tints toward while the Trampoline upgrade is armed.")]
+        public Color trampolineTint = new Color(0.35f, 1f, 0.35f);
+        [Tooltip("How strong that tint is. 0 = off, 1 = full color. Keep it small.")]
+        [Range(0f, 1f)] public float trampolineTintStrength = 0.12f;
 
         [Header("Powerups")]
         [Tooltip("Seconds after a powerup pickup (Trampoline upgrade, Rubber body, etc.) is taken before it respawns.")]
