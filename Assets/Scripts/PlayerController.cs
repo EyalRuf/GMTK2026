@@ -28,6 +28,9 @@ namespace NineLives
         public bool Grounded { get; private set; }
         public Vector2 Velocity => motor.Velocity;
         public Vector3 FeetPosition => transform.position;
+        /// The last horizontal facing sign (+1/-1) the player committed to. Static so a spawning
+        /// corpse can face the death direction without wiring a reference through GameManager.
+        public static float LastFacingSign { get; private set; } = 1f;
         public bool JumpedThisStep { get; private set; }
         public bool BouncedThisStep { get; private set; }
         public bool LandedThisStep { get; private set; }
@@ -255,6 +258,7 @@ namespace NineLives
             if (Mathf.Abs(motor.Velocity.x) > 0.15f)
             {
                 float sign = Mathf.Sign(motor.Velocity.x);
+                LastFacingSign = sign;
                 if (squash != null) squash.FacingSign = sign;
                 else if (catSprite != null)
                     catSprite.localScale = new Vector3(
