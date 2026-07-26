@@ -44,6 +44,9 @@ namespace NineLives
         [Tooltip("Effective mass used to push HangingPhysicsObjects (cages, swinging traps) on contact.")]
         [SerializeField] float pushMass = 5f;
 
+        [Tooltip("How much a landing on top of a hanging object is tipped sideways so it actually sways. 0 = straight down (barely swings).")]
+        [SerializeField] float landSwayFactor = 0.6f;
+
         /// True from the moment an instant-kill hit lands until the death sequence hands off to
         /// GameManager (which deactivates this object for the respawn). Guards against a second
         /// trap re-triggering mid-sequence and tells GameManager to stop feeding real input.
@@ -284,7 +287,20 @@ namespace NineLives
             if (mostlyDown && !LandedThisStep && !HardLandedThisStep) return;
 
             Vector3 velocity = new Vector3(motor.Velocity.x, motor.Velocity.y, 0f);
-            hanging.ApplyImpact(hit.point, hit.moveDirection.normalized * velocity.magnitude * pushMass);
+            Vector3 dir = hit.moveDirection.normalized;
+            if (mostlyDown && landSwayFactor > 0f)
+            {
+                // A straight-down impulse on a pendulum is swallowed by the rope, so landing on top
+                // reads as dead. Tip it toward whichever side of the pivot the cat touched down on
+                // (or its travel direction, if it landed dead centre) to convert some of that into
+                // swing. Re-normalized, so the total impulse is unchanged.
+                float offset = hit.point.x - body.worldCenterOfMass.x;
+                float side = Mathf.Abs(offset) > 0.01f ? Mathf.Sign(offset)
+                           : Mathf.Abs(velocity.x) > 0.01f ? Mathf.Sign(velocity.x)
+                           : 1f;
+                dir = (dir + Vector3.right * (side * landSwayFactor)).normalized;
+            }
+            hanging.ApplyImpact(hit.point, dir * velocity.magnitude * pushMass);
         }
 
         void TickFootsteps(float dt)
